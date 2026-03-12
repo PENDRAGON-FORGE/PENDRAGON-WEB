@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendragon 3D | Impresión 3D y Corte Láser</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#050510',
+                            card: 'rgba(15, 23, 42, 0.5)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Merriweather:wght@400;700;900&display=swap');
+        
+        body {
+            background-color: #050510;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .font-serif { font-family: 'Merriweather', serif; }
+
+        /* Efectos de fondo */
+        .bg-grid {
+            background-image: linear-gradient(rgba(59, 130, 246, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(220, 38, 38, 0.5) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Utilidades para ocultar/mostrar */
+        .hidden { display: none !important; }
+        
+        /* Animaciones básicas */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        /* Ocultar scrollbar en modal pero permitir scroll */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="selection:bg-red-500 selection:text-white pb-20 md:pb-0">
+
+    <!-- DATA -->
+    <script>
+        const BRAND = {
+            whatsapp: "522221236293",
+            social: {
+                tiktok: "https://www.tiktok.com/@pendragonforge3d",
+                youtube: "https://youtube.com",
+                instagram: "https://instagram.com",
+                facebook: "https://facebook.com"
+            },
+            profiles: {
+                makerworld: "https://makerworld.com/es/@PENDRAGON3D/upload",
+                cults: "https://cults3d.com/es/usuarios/PENDRAGON3D/modelos-3d"
+            }
+        };
+
+        const products = [
+            { id: 1, title: "Mini Cámara Retro Porta-Foto", category: "decoracion", price: "$60 MXN", image: "https://i.imgur.com/3D7fFjM.jpeg", desc: "Llavero funcional con diseño de cámara vintage. Cuenta con ranura para foto real.", isNew: true },
+            { id: 2, title: "Cascos y Props Cosplay", category: "decoracion", price: "Cotizar", image: "https://i.postimg.cc/HxThCkdj/cascos-impresos-y-pintados.jpg", desc: "Fabricación a escala real de cascos y armaduras. Entregamos en crudo o pintados.", isNew: true },
+            { id: 3, title: "Organizador Hot Wheels", category: "funcional", price: "Cotizar", image: "https://i.postimg.cc/9XJvCZ4H/coleccionador-hotwheels.jpg", desc: "Display modular tipo panal para carritos de colección escala 1:64.", isNew: false },
+            { id: 4, title: "Dragón y Dinosaurios Flexi", category: "decoracion", price: "Desde $150 MXN", image: "https://i.postimg.cc/MTzF8pqD/dragon-flexi.jpg", desc: "Figuras articuladas impresas en una pieza. Colores duales y metalizados.", isNew: false },
+            { id: 5, title: "Minis para Juegos de Mesa", category: "servicio", price: "Desde $30 MXN", image: "https://i.postimg.cc/x8CpcpkV/minis-helldivers.jpg", desc: "Alta resolución para D&D, Warhammer, etc. Detalle milimétrico listos para pintar.", isNew: false },
+            { id: 6, title: "Soporte Gamer", category: "funcional", price: "Desde $250 MXN", image: "https://i.postimg.cc/26TXjN5R/soporte-control-deriva.jpg", desc: "Soportes temáticos para controles de Xbox, PlayStation o Nintendo.", isNew: false },
+            { id: 7, title: "Figuras Pokémon", category: "decoracion", price: "Desde $25 MXN", image: "https://i.postimg.cc/mDT5GgBV/coleccion-pokemon-a-color-151.jpg", desc: "Modelos multicolores. El color es plástico real, sin pintura que se descarape.", isNew: false },
+            { id: 8, title: "Llaveros 3D Personalizados", category: "decoracion", price: "Desde $35 MXN", image: "https://i.postimg.cc/tJSfkG0d/llaveros-multicolor-3d.jpg", desc: "Llaveros con volumen impresos en varios colores. Ideal para souvenirs o logos.", isNew: false },
+            { id: 9, title: "Porta Llaves Garage", category: "funcional", price: "$180 MXN", image: "https://i.postimg.cc/bJqBjwpv/porta-llaves-garage1.jpg", desc: "Organizador simulando bujías y conectores. Impresión en PETG resistente.", isNew: false },
+            { id: 10, title: "Colección Yu-Gi-Oh! x Sanrio", category: "decoracion", price: "$325 MXN", image: "https://i.postimg.cc/C51rzrZK/yugioh-x-sanryo.jpg", desc: "Colección completa de figuras crossover impresas a todo color. Perfectas para escritorio.", isNew: true },
+            { id: 11, title: "Set Eevee y Evoluciones", category: "decoracion", price: "$450 MXN", image: "https://i.postimg.cc/C51rzrZT/pokemon-eevelutions.jpg", desc: "Incluye a Eevee y sus 3 primeras evoluciones clásicas. Impresión 3D multicolor lista para exhibir.", isNew: true }
+        ];
+
+        // Se han incluido TODAS las marcas proporcionadas. 
+        // Las que no tienen 'image' usarán su 'logo' como fondo difuminado automáticamente.
+        const forjas = [
+            { id: 'aeonhammer', name: "Aeonhammer", logo: "https://i.postimg.cc/d367SnnG/aeonhammer.png", desc: "Armamento y utilería de ciencia ficción de eras futuras." },
+            { id: 'alcancias', name: "Alcancías 3D", logo: "https://i.postimg.cc/Y0R4y88z/alcancias-3d.png", desc: "Colección de alcancías personalizadas y temáticas." },
+            { id: 'aptica', name: "APTICA Studio", logo: "https://i.postimg.cc/c1B8H4ZZ/APTICA-Neural-Craft-Studio.png", desc: "Diseños generativos, geométricos y experimentales." },
+            { id: 'arcano', name: "Arcano Gear", logo: "https://i.postimg.cc/ZRrv6Jd6/ARCANOGEAR-FORGE-RELIC-PROTOCOL.png", image: "https://i.postimg.cc/hPY67n1G/ARCANOGEAR-FORGE-RELIC-PROTOCOL-1.jpg", desc: "Fusión de ingeniería arcana y estética steampunk." },
+            { id: 'astral', name: "Astral Armor Atelier", logo: "https://i.postimg.cc/gjswB44M/astral-armor-atelier.png", desc: "Forja de armaduras espaciales y de fantasía estelar." },
+            { id: 'booked', name: "Booked 3D", logo: "https://i.postimg.cc/KjfKsQQs/booked-3d.png", image: "https://i.postimg.cc/59nZbLH5/booked-3d-1.jpg", desc: "Separadores y accesorios para tu biblioteca." },
+            { id: 'capsule', name: "Capsule Factory", logo: "https://i.postimg.cc/rm6tdDKR/capsule-factory.png", desc: "Pequeños coleccionables y juguetes sorpresa encapsulados." },
+            { id: 'cartoon', name: "Cartoon Vanguard", logo: "https://i.postimg.cc/mkjc6VV8/CARTOON-VANGUARD-COLLECTIBLES.png", image: "https://i.postimg.cc/xTZhbQ3f/CARTOON-VANGUARD-COLLECTIBLES.jpg", desc: "Coleccionables cartoon con acabados dinámicos." },
+            { id: 'celestial', name: "Celestial Helmforge", logo: "https://i.postimg.cc/wM2tbFFw/celestial-helmforge.png", desc: "Cascos divinos, coronas y tocados cósmicos." },
+            { id: 'chimera', name: "Chimera Forge", logo: "https://i.postimg.cc/Ss0zXnJM/chimera-forge.png", image: "https://i.postimg.cc/QdWPQzfm/chimera-forge-1.jpg", desc: "Modelado 3D de armamento y props para cosplay." },
+            { id: 'crownclash', name: "Crownclash Forge", logo: "https://i.postimg.cc/yxjJrnnZ/crownclash-forge.png", image: "https://i.postimg.cc/1RJLswg5/crownclash-forge1.jpg", desc: "Armaduras, coronas y utilería digna de la realeza." },
+            { id: 'crownforge', name: "Crownforge", logo: "https://i.postimg.cc/wvKst17N/crownforge.png", image: "https://i.postimg.cc/MKHgTHR1/crownforge-1.jpg", desc: "Accesorios para cosplay de alta realeza y fantasía." },
+            { id: 'daemonic', name: "Daemonic Foundry", logo: "https://i.postimg.cc/d1MT7hL1/DAEMONIC-FOUNDRY.png", image: "https://i.postimg.cc/65qF3qRd/DAEMONIC-FOUNDRY-1.jpg", desc: "Miniaturas de alta fantasía oscura y demoníaca." },
+            { id: 'dinomachina', name: "Dino Machina", logo: "https://i.postimg.cc/50cFHX64/dinomachina.png", image: "https://i.postimg.cc/3w5qnZq2/dinomachina-1.jpg", desc: "Kits de mechas y bestias prehistóricas sin soportes." },
+            { id: 'duelforge', name: "Duelforge Archives", logo: "https://i.postimg.cc/qRfCtNzk/duelforge-monster-archives.png", desc: "Accesorios y cajas deck para juegos de cartas (TCG)." },
+            { id: 'evolveforge', name: "Evolveforge", logo: "https://i.postimg.cc/fbS9TcTz/evolveforge.png", desc: "Criaturas mutantes y diseños orgánicos evolutivos." },
+            { id: 'forgedisplay', name: "Forge Display", logo: "https://i.postimg.cc/7LJ2Y3YL/forge-display.png", desc: "Bases, soportes y dioramas para exhibir tu colección." },
+            { id: 'fragmentos', name: "Fragmentos del Velo", logo: "https://i.postimg.cc/4dzHpX9P/fragmentos-del-velo.png", image: "https://i.postimg.cc/Mpj47L9K/fragmentos-del-velo-1.jpg", desc: "Colección mística de artefactos y misterios." },
+            { id: 'galaxy', name: "Galaxyforge", logo: "https://i.postimg.cc/YSLWq6qK/GALAXYFORGE.png", image: "https://i.postimg.cc/fR0FcP8V/GALAXYFORGE-1.jpg", desc: "Vehículos y naves espaciales de ciencia ficción." },
+            { id: 'glasscut', name: "Glasscut", logo: "https://i.postimg.cc/nL9Dc4VN/glasscut.png", desc: "Proyectos y diseños orientados a corte láser en acrílico." },
+            { id: 'grimforge', name: "Grimforge Protocol", logo: "https://i.postimg.cc/y6ySdYBK/GRIMFORGE-WAR-KNIGHT-PROTOCOL.png", desc: "Caballeros de guerra y protocolos mecha oscuros." },
+            { id: 'hexamorph', name: "Hexamorph Forge", logo: "https://i.postimg.cc/HL8yswWR/HEXAMORPH-FORGE.png", desc: "Sistemas modulares y organizadores hexagonales." },
+            { id: 'iconhelms', name: "Iconhelms Legions", logo: "https://i.postimg.cc/vTbgzC74/iconhelms-legions.png", desc: "Los cascos más icónicos de la cultura pop y videojuegos." },
+            { id: 'ixtlium', name: "Ixtlium Forge", logo: "https://i.postimg.cc/JhHk4N72/ixtlium-forge.png", desc: "Fusión de estética prehispánica/azteca con cyberpunk." },
+            { id: 'knightmare', name: "Knightmare Forge", logo: "https://i.postimg.cc/3w0vJXrb/knightmare-forge.png", image: "https://i.postimg.cc/rwtb1Hft/knightmare-forge.jpg", desc: "Monstruosidades biomecánicas de pesadilla." },
+            { id: 'mechabestiary', name: "Mechabestiary", logo: "https://i.postimg.cc/Qdy734sL/MECHABESTIARY-FORGE.png", desc: "Bestiario completo de animales robóticos y mechas." },
+            { id: 'metalprehistoria', name: "Metal Prehistoria", logo: "https://i.postimg.cc/kgpSm1Ch/metal-prehistoria.png", desc: "Dinosaurios e insectos gigantes con armamento." },
+            { id: 'mexiconic', name: "Mexiconic Toyforge", logo: "https://i.postimg.cc/Qdy734DR/MEXICONIC-TOYFORGE.png", desc: "Juguetes y figuras inspiradas en la cultura de México." },
+            { id: 'minimotor', name: "Minimotor Works", logo: "https://i.postimg.cc/mg59sX4p/minimotor-works.png", desc: "Motores, engranes y modelos de vehículos a escala." },
+            { id: 'multichibi', name: "Multichibicore", logo: "https://i.postimg.cc/NjzXcJtk/multichibicore.png", image: "https://i.postimg.cc/Pf2BTYLL/multichibicore-1.jpg", desc: "Personajes reinterpretados en formato chibi adorable." },
+            { id: 'obsidian', name: "Obsidian Legends", logo: "https://i.postimg.cc/52RzV7Jw/OBSIDIANFORGE-ANCESTRAL-STL-LEGENDS.png", image: "https://i.postimg.cc/m2kKDkM8/OBSIDIANFORGE-ANCESTRAL-STL-LEGENDS-1.jpg", desc: "Esculturas de gran formato con texturas en piedra." },
+            { id: 'popform', name: "Popform Forge", logo: "https://i.postimg.cc/Sxs9H0BW/popform-forge.png", desc: "Figuras y bustos de íconos de la cultura pop actual." },
+            { id: 'sigilforge', name: "Sigilforge", logo: "https://i.postimg.cc/cLb3S9WM/sigilforge.png", desc: "Sellos, tokens, monedas y reliquias de escritorio." },
+            { id: 'silhouette', name: "Silhouetteforge", logo: "https://i.postimg.cc/mgD9KxvM/SILHOUETTEFORGE-STL-MONSTER-FUSIONS.png", desc: "Fusiones monstruosas y sombras hechas 3D." },
+            { id: 'spartan', name: "Spartan Legion", logo: "https://i.postimg.cc/XYJ5tMRy/spartan-legion.png", image: "https://i.postimg.cc/28yg6yvX/spartan-legion-1.jpg", desc: "Homenaje a los guerreros del espacio." },
+            { id: 'threadforge', name: "Threadforge", logo: "https://i.postimg.cc/4xdcjCDm/THREADFORGE-KNITTED-STL-LEGENDS.png", image: "https://i.postimg.cc/L6WwZSBG/THREADFORGE-KNITTED-STL-LEGENDS-1.jpg", desc: "Texturas que simulan tejido en plástico sólido." },
+            { id: 'triform', name: "Triform Toyforge", logo: "https://i.postimg.cc/nhzmN8yH/triform-toyforge.png", desc: "Juguetes articulados con múltiples transformaciones." },
+            { id: 'vixen', name: "Vixen Forge", logo: "https://i.postimg.cc/bwJn4X7D/vixen-forge.png", desc: "Esculturas y armaduras enfocadas en personajes femeninos." },
+            { id: 'wardenbeast', name: "Wardenbeast Atlas", logo: "https://i.postimg.cc/NjzXcJtb/WARDENBEAST-ATLAS.png", desc: "Bestias guardianes de gran escala para proteger tu repisa." },
+            { id: 'warframeops', name: "Warframe Ops", logo: "https://i.postimg.cc/KcDgzvFZ/warframe-ops.png", image: "https://i.postimg.cc/Mpj47L9V/warframe-ops-1.jpg", desc: "Equipamiento táctico de operaciones especiales." }
+        ];
+
+        const galleryImages = [
+            "https://i.postimg.cc/MHT3v3cM/impresion-venator-pintado.jpg",
+            "https://i.postimg.cc/rsmZKZd4/casco-pintado-star-wars.jpg",
+            "https://i.postimg.cc/y6vwscJN/figuras-yugioh-1.jpg",
+            "https://i.postimg.cc/qRp5dv4n/san-pikachu.jpg",
+            "https://i.postimg.cc/DZ7MKwnP/flexi-esqueleto-dino.jpg",
+            "https://i.postimg.cc/cC9jhGqg/figuras-halo-pintadas.jpg",
+            "https://i.postimg.cc/C51rzrZT/pokemon-eevelutions.jpg", // Eeveelutions restauradas
+            "https://i.postimg.cc/C51rzrZK/yugioh-x-sanryo.jpg"      // Yugi x Sanrio restaurado
+        ];
+    </script>
+
+    <!-- BANNER PROMO -->
+    <div id="promo-banner" class="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 text-white text-xs md:text-sm py-2 px-4 text-center relative z-[60]">
+        <span class="font-bold tracking-wider flex items-center justify-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-yellow-400"></i>
+            ¡OFERTA DE LANZAMIENTO! 10% DE DESCUENTO EN TU PRIMER PEDIDO
+            <i data-lucide="sparkles" class="w-4 h-4 text-yellow-400"></i>
+        </span>
+        <button onclick="document.getElementById('promo-banner').style.display='none'" class="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-[#050510]/90 backdrop-blur-xl sticky top-0 z-50 border-b border-slate-800/50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3 group cursor-pointer" onclick="window.scrollTo(0,0)">
+                <img src="https://i.imgur.com/J5efweH.png" alt="Logo Pendragon" class="h-12 md:h-16 w-auto object-contain hover:scale-105 transition" />
+                <div>
+                    <h1 class="text-lg md:text-xl font-black tracking-tighter text-white font-serif tracking-widest leading-none flex flex-col group-hover:text-blue-200 transition">
+                        <span>PENDRAGON</span>
+                        <span class="text-[10px] md:text-xs text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-red-500 font-sans tracking-[0.3em]">3D STUDIOS</span>
+                    </h1>
+                </div>
+            </div>
+            
+            <!-- Desktop Nav -->
+            <nav class="hidden md:flex items-center gap-6 text-sm font-bold text-slate-400">
+                <a href="#catalogo" class="hover:text-blue-400 transition flex items-center gap-1"><i data-lucide="box" class="w-4 h-4"></i> Catálogo</a>
+                <a href="#forjas" class="hover:text-purple-400 transition flex items-center gap-1"><i data-lucide="layers" class="w-4 h-4"></i> Las Forjas</a>
+                <a href="#estudio" class="hover:text-red-400 transition flex items-center gap-1"><i data-lucide="dices" class="w-4 h-4"></i> Estudio</a>
+                <a href="#nosotros" class="hover:text-white transition">Nosotros</a>
+                <button onclick="openWhatsApp()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 border border-green-400/30 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> WhatsApp
+                </button>
+            </nav>
+
+            <!-- Mobile Menu Toggle -->
+            <button class="md:hidden text-white p-2" onclick="toggleMobileMenu()">
+                <i data-lucide="menu" id="menu-icon"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Nav Dropdown -->
+        <div id="mobile-menu" class="hidden md:hidden bg-[#050510] border-b border-slate-800 px-4 py-4 flex flex-col gap-4 absolute w-full left-0 shadow-2xl">
+            <a href="#catalogo" onclick="toggleMobileMenu()" class="text-left font-bold text-blue-400 flex items-center gap-2"><i data-lucide="box" class="w-5 h-5"></i> Catálogo de Productos</a>
+            <a href="#forjas" onclick="toggleMobileMenu()" class="text-left font-bold text-purple-400 flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5"></i> Las Forjas Propias</a>
+            <a href="#estudio" onclick="toggleMobileMenu()" class="text-left font-bold text-red-400 flex items-center gap-2"><i data-lucide="dices" class="w-5 h-5"></i> Proyectos y Podcast</a>
+            <a href="#nosotros" onclick="toggleMobileMenu()" class="text-left font-bold text-white flex items-center gap-2"><i data-lucide="user" class="w-5 h-5"></i> Sobre Nosotros</a>
+            <button onclick="openWhatsApp()" class="bg-green-600 text-white py-3 rounded-lg font-bold flex justify-center items-center gap-2 mt-2">
+                <i data-lucide="message-circle" class="w-5 h-5"></i> Contactar por WhatsApp
+            </button>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <div class="relative bg-[#050510] py-20 md:py-32 overflow-hidden">
+        <div class="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
+        <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow" style="animation-delay: 1s"></div>
+        <div class="absolute inset-0 opacity-10 bg-grid"></div>
+
+        <div class="container mx-auto px-4 text-center relative z-10">
+            <div class="inline-flex items-center gap-2 py-1 px-4 rounded-full bg-slate-900/80 border border-slate-700 text-blue-300 text-xs font-bold mb-8 backdrop-blur-sm">
+                <i data-lucide="crown" class="w-3 h-3 text-red-500"></i>
+                <span class="tracking-widest uppercase">Calidad & Pasión Maker</span>
+            </div>
+            
+            <h2 class="text-5xl md:text-7xl font-black mb-4 tracking-tight text-white drop-shadow-2xl">
+                DE TU IMAGINACIÓN<br/>A LA VIDA REAL
+            </h2>
+            <p class="text-xl md:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-red-400 font-bold mb-10 tracking-wide">
+                IMPRESIÓN 3D & CORTE LÁSER
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="openWhatsApp(null, 'Hola, me gustaría cotizar una impresión 3D.')" class="group px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-bold transition-all shadow-[0_0_20px_rgba(147,51,234,0.4)] flex items-center justify-center gap-2 hover:scale-105">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-yellow-300 group-hover:rotate-12 transition-transform"></i> Iniciar un Proyecto
+                </button>
+                <a href="#catalogo" class="px-8 py-4 bg-slate-800 border border-slate-600 text-white rounded-lg font-bold hover:bg-slate-700 transition flex items-center justify-center gap-2">
+                    <i data-lucide="box" class="w-5 h-5"></i> Ver Catálogo Físico
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 relative">
+        
+        <!-- SECCIÓN: CÓMO HACER UN PEDIDO -->
+        <section class="py-16 border-t border-slate-800/50 bg-[#0a0a15] rounded-3xl my-16 shadow-2xl relative overflow-hidden">
+             <!-- Decoración de fondo -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-blue-600/5 rounded-full blur-[80px]"></div>
+            <div class="absolute bottom-0 left-0 w-64 h-64 bg-purple-600/5 rounded-full blur-[80px]"></div>
+
+            <div class="text-center mb-12 relative z-10">
+                <h3 class="text-3xl font-black text-white font-serif mb-4 flex items-center justify-center gap-3">
+                    <i data-lucide="zap" class="w-8 h-8 text-yellow-500"></i> ¿CÓMO HACER UN PEDIDO?
+                </h3>
+                <p class="text-slate-400 max-w-2xl mx-auto">Es muy fácil convertir tu idea en una pieza física. Sigue estos 3 pasos:</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto relative px-4 z-10">
+                <!-- Línea conectora (Desktop) -->
+                <div class="hidden md:block absolute top-10 left-[15%] right-[15%] h-0.5 bg-slate-800 z-0"></div>
+                
+                <!-- Paso 1 -->
+                <div class="relative z-10 bg-slate-900/80 backdrop-blur-md p-6 rounded-2xl border border-slate-800 text-center hover:-translate-y-2 transition-transform duration-300">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-blue-900/20 border-2 border-blue-500/30 flex items-center justify-center mb-6 relative shadow-lg">
+                        <i data-lucide="search" class="w-8 h-8 text-blue-400"></i>
+                        <div class="absolute -top-2 -right-2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center font-black text-white border-2 border-[#0a0a15]">1</div>
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-3">Encuentra tu Diseño</h4>
+                    <p class="text-slate-400 text-sm leading-relaxed">Elige del catálogo, de nuestras Forjas o busca el modelo 3D en páginas como Cults, MakerWorld o Thingiverse.</p>
+                </div>
+
+                <!-- Paso 2 -->
+                <div class="relative z-10 bg-slate-900/80 backdrop-blur-md p-6 rounded-2xl border border-slate-800 text-center hover:-translate-y-2 transition-transform duration-300">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-green-900/20 border-2 border-green-500/30 flex items-center justify-center mb-6 relative shadow-lg">
+                        <i data-lucide="message-circle" class="w-8 h-8 text-green-400"></i>
+                        <div class="absolute -top-2 -right-2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center font-black text-white border-2 border-[#0a0a15]">2</div>
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-3">Cotiza por WhatsApp</h4>
+                    <p class="text-slate-400 text-sm leading-relaxed">Mándanos el link, captura o tu idea. Te asesoraremos con el material adecuado y te daremos precio y tiempo de entrega.</p>
+                </div>
+
+                <!-- Paso 3 -->
+                <div class="relative z-10 bg-slate-900/80 backdrop-blur-md p-6 rounded-2xl border border-slate-800 text-center hover:-translate-y-2 transition-transform duration-300">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-purple-900/20 border-2 border-purple-500/30 flex items-center justify-center mb-6 relative shadow-lg">
+                        <i data-lucide="rocket" class="w-8 h-8 text-purple-400"></i>
+                        <div class="absolute -top-2 -right-2 w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center font-black text-white border-2 border-[#0a0a15]">3</div>
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-3">¡A la Forja!</h4>
+                    <p class="text-slate-400 text-sm leading-relaxed">Una vez confirmado, comenzamos a fabricar tu pieza cuidando cada milímetro y te la enviamos lista hasta tu casa.</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-12 relative z-10">
+                <button onclick="openWhatsApp(null, 'Hola, quiero hacer un pedido 3D.')" class="bg-white hover:bg-slate-200 text-black px-8 py-4 rounded-full font-black transition inline-flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105">
+                    <i data-lucide="message-circle" class="w-5 h-5"></i> Iniciar mi pedido ahora
+                </button>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: CATÁLOGO FÍSICO -->
+        <section id="catalogo" class="py-16 scroll-mt-24 border-t border-slate-800/50">
+            <div class="w-full text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-black text-white font-serif mb-2">CATÁLOGO DE ARTEFACTOS</h3>
+                <p class="text-slate-500">Nuestros productos estrella listos para forjar y enviar</p>
+            </div>
+            
+            <!-- Filtros UI (Visuales) -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-12" id="filter-container">
+               <button onclick="filterProducts('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-800 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]">Todo</button>
+               <button onclick="filterProducts('decoracion')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white flex items-center gap-1"><i data-lucide="box" class="w-4 h-4"></i> Decoración</button>
+               <button onclick="filterProducts('funcional')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white flex items-center gap-1"><i data-lucide="hammer" class="w-4 h-4"></i> Resistente</button>
+               <button onclick="filterProducts('laser')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white flex items-center gap-1"><i data-lucide="zap" class="w-4 h-4"></i> Láser</button>
+            </div>
+
+            <!-- Grid de Productos generada por JS -->
+            <div id="products-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN: NUESTRAS FORJAS (NUEVO DISEÑO CON LAS 40 MARCAS) -->
+        <section id="forjas" class="py-24 border-t border-slate-800/50 scroll-mt-24">
+             <div class="text-center mb-10">
+                <div class="inline-flex items-center gap-2 text-purple-400 text-xs font-bold mb-4 tracking-widest uppercase bg-purple-900/20 px-3 py-1 rounded-full border border-purple-900/50">
+                    <i data-lucide="palette" class="w-3 h-3"></i> Creación Original
+                </div>
+                <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-4">
+                    NUESTRAS FORJAS
+                </h3>
+                <p class="text-slate-400 max-w-2xl mx-auto text-lg mb-8">
+                    El ecosistema completo de nuestras líneas de diseño y coleccionables. 
+                    Encuentra estos modelos en nuestros repositorios para descargar o pídenos la impresión física.
+                </p>
+
+                <!-- BOTONES STLs -->
+                <div class="flex flex-col sm:flex-row justify-center gap-4 max-w-xl mx-auto mb-12">
+                    <a href="https://makerworld.com/es/@PENDRAGON3D/upload" target="_blank" class="flex-1 bg-green-600/20 hover:bg-green-600/40 text-green-400 border border-green-600/50 py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                        <i data-lucide="download" class="w-5 h-5"></i> STLs Gratis (MakerWorld)
+                    </a>
+                    <a href="https://cults3d.com/es/usuarios/PENDRAGON3D/modelos-3d" target="_blank" class="flex-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 border border-purple-600/50 py-3 px-6 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                        <i data-lucide="star" class="w-5 h-5"></i> STLs Premium (Cults 3D)
+                    </a>
+                </div>
+            </div>
+
+            <!-- GRID MOSAICO MASIVO (Carga dinámica de las 40 forjas) -->
+            <div id="forjas-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                <!-- Se llena con JavaScript -->
+            </div>
+            
+            <!-- Repositorios Externos -->
+            <div class="mt-16 text-center bg-slate-900/30 p-8 rounded-3xl border border-slate-800 max-w-3xl mx-auto">
+                <p class="text-white font-bold mb-4 flex items-center justify-center gap-2"><i data-lucide="globe" class="text-blue-500 w-5 h-5"></i> ¿Buscas un modelo específico de internet?</p>
+                <p class="text-sm text-slate-400 mb-6">Si encuentras algo en sitios como Thingiverse o Printables, <button onclick="openWhatsApp('Tengo un link de un modelo 3D')" class="text-blue-400 hover:underline font-bold">mándanos el link</button> y te lo fabricamos.</p>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: GALERÍA -->
+        <section class="py-16 border-t border-slate-800/50">
+            <h3 class="text-3xl font-black text-white font-serif mb-8 text-center flex items-center justify-center gap-3">
+               <i data-lucide="image" class="text-blue-500 w-8 h-8"></i> TRABAJOS REALIZADOS
+            </h3>
+            
+            <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN: ESTUDIO Y PODCAST -->
+        <section id="estudio" class="py-24 border-t border-slate-800/50 scroll-mt-24">
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center gap-2 text-red-400 text-xs font-bold mb-4 tracking-widest uppercase bg-red-900/20 px-3 py-1 rounded-full border border-red-900/50">
+                    <i data-lucide="flame" class="w-3 h-3"></i> Más allá de la impresión
+                </div>
+                <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-4">
+                    EL ECOSISTEMA PENDRAGON
+                </h3>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Carta TikTok / YouTube -->
+                <div class="bg-gradient-to-br from-[#1a0f14] to-black border border-red-900/30 rounded-3xl p-8 relative overflow-hidden group hover:border-red-500/50 transition duration-500 flex flex-col">
+                    <div class="absolute top-0 right-0 w-[300px] h-[300px] bg-red-600/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-red-600/20 transition"></div>
+                    <div class="relative z-10 flex-1 flex flex-col">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="bg-black p-2 rounded-xl border border-red-900/50">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg>
+                            </div>
+                            <h4 class="text-3xl font-black text-white tracking-wide font-serif">NUESTRO TIKTOK</h4>
+                        </div>
+                        <p class="text-slate-400 mb-6 leading-relaxed">
+                            Descubre cómo trabajamos. Subimos procesos de impresión, pintura de figuras, reviews y el detrás de cámaras de nuestros proyectos gigantes.
+                        </p>
+                        
+                        <div class="bg-black/50 border border-slate-700 rounded-xl p-4 mb-8 flex items-center justify-between cursor-pointer hover:border-red-500/50 transition group/video" onclick="window.open('https://www.tiktok.com/@pendragonforge3d', '_blank')">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-16 bg-slate-800 rounded-lg flex items-center justify-center group-hover/video:bg-red-600/20 transition shadow-inner">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white" class="opacity-80 group-hover/video:opacity-100"><path d="M8 5v14l11-7z"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-white font-bold text-sm">Ver últimos videos</p>
+                                    <p class="text-xs text-slate-500">@pendragonforge3d</p>
+                                </div>
+                            </div>
+                            <i data-lucide="external-link" class="text-slate-500 w-4 h-4"></i>
+                        </div>
+
+                        <button onclick="window.open('https://www.tiktok.com/@pendragonforge3d', '_blank')" class="bg-red-600 hover:bg-red-500 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition w-full shadow-[0_0_15px_rgba(239,68,68,0.3)] mt-auto">
+                           Seguirnos en TikTok
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Carta Proyecto Juego de Mesa -->
+                <div class="bg-gradient-to-br from-[#0f172a] to-black border border-indigo-900/30 rounded-3xl p-8 relative overflow-hidden group hover:border-indigo-500/50 transition duration-500 flex flex-col">
+                    <div class="absolute top-0 right-0 w-[300px] h-[300px] bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-indigo-600/20 transition"></div>
+                    <div class="relative z-10 flex-1 flex flex-col">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="bg-black p-2 rounded-xl border border-indigo-900/50">
+                                <i data-lucide="dices" class="w-8 h-8 text-indigo-400"></i>
+                            </div>
+                            <h4 class="text-3xl font-black text-white tracking-wide font-serif">BOARD GAME INDIE</h4>
+                        </div>
+                        <p class="text-slate-400 mb-6 leading-relaxed">
+                            Nuestra pasión nos llevó a crear nuestro propio juego de mesa original. Desde el diseño de las mecánicas hasta la creación de cartas y modelado 3D de las miniaturas. 
+                        </p>
+                        <div class="bg-indigo-950/30 border border-indigo-500/20 rounded-xl p-5 mb-8 flex-1">
+                            <p class="text-xs text-indigo-300 uppercase tracking-widest font-bold mb-2">Estado de Desarrollo:</p>
+                            <div class="flex items-center gap-4 mb-2">
+                                <div class="w-full bg-slate-800 rounded-full h-3">
+                                    <div class="bg-indigo-500 h-3 rounded-full w-[35%] relative shadow-[0_0_10px_rgba(99,102,241,0.8)]"></div>
+                                </div>
+                                <span class="text-white font-black text-sm">Pre-Alpha</span>
+                            </div>
+                            <p class="text-xs text-slate-500">Desarrollando sistema de cartas y prototipando miniaturas.</p>
+                        </div>
+                        <button onclick="window.open('TU_LINK_DE_CARTAS_AQUI', '_blank')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-4 rounded-xl font-bold flex items-center justify-center gap-3 transition w-full shadow-[0_0_15px_rgba(99,102,241,0.3)] mt-auto">
+                            <i data-lucide="layers" class="w-5 h-5"></i> Creador de Cartas
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: SOBRE NOSOTROS -->
+        <section id="nosotros" class="py-24 border-t border-slate-800/50 scroll-mt-24">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="order-2 md:order-1 relative">
+                     <div class="aspect-video bg-slate-800 rounded-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105" style="background-image: url('https://i.postimg.cc/wBXGPm8v/foto-impresoras-3d-del-taller.jpg')"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#050510] via-black/20 to-transparent"></div>
+                        <div class="relative z-10 mt-auto w-full p-6 text-left">
+                            <p class="text-white font-bold text-lg drop-shadow-md flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5 text-blue-500"></i> El núcleo del Taller</p>
+                        </div>
+                     </div>
+                     <div class="absolute -bottom-4 -right-4 bg-slate-900 p-4 rounded-xl border border-slate-700 shadow-xl flex items-center gap-3">
+                        <i data-lucide="map-pin" class="text-red-500 w-6 h-6"></i>
+                        <div><p class="text-xs text-slate-400 uppercase font-bold">Ubicación</p><p class="text-white font-bold text-sm">Oaxaca, México</p></div>
+                     </div>
+                </div>
+                <div class="order-1 md:order-2">
+                    <h3 class="text-3xl font-black text-white font-serif mb-6">HOLA, SOY ARMANDO</h3>
+                    <p class="text-slate-400 mb-6 leading-relaxed text-lg">
+                        Bienvenido a <strong>Pendragon 3D</strong>. Desde mi taller en Oaxaca, me dedico a materializar ideas usando tecnología FDM y Corte Láser. 
+                        A diferencia de las fábricas masivas, aquí reviso personalmente cada capa y calibro mis máquinas para asegurar máxima calidad y resistencia en tus proyectos.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4 mb-8">
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center gap-4">
+                            <div class="text-blue-500"><i data-lucide="clock" class="w-6 h-6"></i></div>
+                            <div><p class="text-white font-bold">+5,000</p><p class="text-xs text-slate-400">Horas Impresión</p></div>
+                        </div>
+                        <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center gap-4">
+                            <div class="text-blue-500"><i data-lucide="rocket" class="w-6 h-6"></i></div>
+                            <div><p class="text-white font-bold">+200</p><p class="text-xs text-slate-400">Proyectos</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <footer class="bg-black text-slate-500 py-12 border-t border-slate-900 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex justify-center items-center gap-2 mb-6 cursor-pointer" onclick="window.scrollTo(0,0)">
+                <i data-lucide="shield" class="text-red-600 w-8 h-8"></i>
+                <span class="text-2xl font-black text-white font-serif tracking-widest">PENDRAGON 3D</span>
+            </div>
+            <p class="text-sm mb-8 text-slate-600">Oaxaca, México.<br/>Impresión FDM & Corte Láser.</p>
+            <div class="flex justify-center gap-8 text-sm font-bold tracking-wider uppercase text-slate-400 mb-8">
+                <a href="https://instagram.com" class="hover:text-blue-500 transition">Instagram</a>
+                <a href="https://www.tiktok.com/@pendragonforge3d" class="hover:text-white transition">TikTok</a>
+                <a href="https://makerworld.com/es/@PENDRAGON3D/upload" class="hover:text-green-500 transition">MakerWorld</a>
+            </div>
+            <div class="text-xs text-slate-800">© 2024 PENDRAGON 3D.</div>
+        </div>
+    </footer>
+
+    <!-- MODAL PRODUCTO / FORJA -->
+    <div id="product-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300" onclick="closeModal()">
+        <div class="bg-[#0a0a1a] rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[90vh] border border-slate-800 transform scale-95 transition-transform duration-300" id="modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-4 right-4 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full z-10 transition backdrop-blur-md border border-white/10">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="w-full md:w-1/2 flex items-center justify-center relative overflow-hidden bg-slate-900" id="modal-img-container">
+                 <div class="absolute inset-0 opacity-30 bg-[radial-gradient(circle,rgba(59,130,246,0.5)_0%,transparent_70%)] z-0"></div>
+                 <img id="modal-img" src="" alt="Producto" class="w-full h-full object-cover relative z-10" />
+            </div>
+            <div class="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto no-scrollbar bg-[#0a0a1a]">
+                <div class="mb-6">
+                    <span id="modal-cat" class="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded border border-blue-900/50 text-blue-400 bg-blue-900/20"></span>
+                    <h2 id="modal-title" class="text-3xl font-black text-white mt-4 mb-2 font-serif tracking-wide"></h2>
+                    <p id="modal-price" class="text-2xl text-white font-medium"></p>
+                </div>
+                <p id="modal-desc" class="text-slate-300 text-lg leading-relaxed font-light mb-8"></p>
+                
+                <button id="modal-btn" onclick="" class="w-full py-4 rounded-lg font-bold transition shadow-lg flex items-center justify-center gap-3 text-lg text-white border border-white/10 bg-blue-600 hover:bg-blue-500 shadow-blue-900/20">
+                    <i data-lucide="message-circle" class="w-6 h-6"></i> <span id="modal-btn-text">Cotizar este producto</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        lucide.createIcons();
+
+        function openWhatsApp(productName = null, customMessage = null) {
+            let text = customMessage || (productName ? `Hola Armando! Vi el catálogo de Pendragon 3D y me interesa: ${productName}` : `Hola Armando! Soy de Oaxaca y quiero cotizar una impresión 3D.`);
+            window.open(`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        function renderProducts(filter = 'all') {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+            
+            filtered.forEach(p => {
+                const isNewBadge = p.isNew ? `<div class="absolute top-4 left-4 z-20 bg-yellow-500 text-black text-[10px] font-black px-2 py-1 rounded shadow-lg">NUEVO</div>` : '';
+                const card = `
+                <div class="bg-slate-900/50 rounded-xl overflow-hidden shadow-lg border border-slate-800 hover:border-blue-500/50 transition-all duration-300 group cursor-pointer flex flex-col hover:-translate-y-2 relative" onclick="openProductModal(${p.id})">
+                  ${isNewBadge}
+                  <div class="h-64 w-full flex items-center justify-center relative overflow-hidden bg-[#0a0a1a]">
+                     <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" loading="lazy"/>
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                        <span class="text-white border border-white/30 px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition duration-300">Ver Detalles</span>
+                    </div>
+                  </div>
+                  <div class="p-6 flex-1 flex flex-col">
+                    <h3 class="text-xl font-bold text-white mb-3 leading-tight font-serif group-hover:text-blue-400 transition-colors">${p.title}</h3>
+                    <p class="text-slate-400 text-sm mb-6 flex-1 line-clamp-3 overflow-hidden text-ellipsis display-webkit-box webkit-line-clamp-3 webkit-box-orient-vertical">${p.desc}</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+                        <span class="text-lg font-bold text-white">${p.price}</span>
+                        <div class="text-slate-500 hover:text-white bg-slate-800 p-2 rounded-full">></div>
+                    </div>
+                  </div>
+                </div>`;
+                grid.innerHTML += card;
+            });
+            lucide.createIcons();
+        }
+
+        function renderForjas() {
+            const grid = document.getElementById('forjas-grid');
+            forjas.forEach(f => {
+                const bgUrl = f.image ? f.image : f.logo;
+                const bgClass = f.image ? "object-cover opacity-50" : "object-cover opacity-30 blur-md scale-150";
+
+                const card = `
+                <div class="relative aspect-square bg-slate-900 rounded-xl overflow-hidden group cursor-pointer border border-slate-800 hover:border-purple-500/50 transition-all duration-300 shadow-lg" onclick="openForjaModal('${f.id}')">
+                    <img src="${bgUrl}" alt="Fondo ${f.name}" class="absolute inset-0 w-full h-full ${bgClass} group-hover:opacity-20 transition duration-500" loading="lazy" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center p-4 transition-transform duration-300 group-hover:-translate-y-4">
+                        <img src="${f.logo}" alt="Logo" class="w-3/4 object-contain drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]" />
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center">
+                        <p class="text-[10px] md:text-xs text-slate-300 text-center line-clamp-2 mb-2 leading-tight">${f.desc}</p>
+                        <span class="text-xs font-bold text-purple-400 flex items-center gap-1 bg-purple-900/30 px-3 py-1 rounded-full border border-purple-500/30"><i data-lucide="zoom-in" class="w-3 h-3"></i> Ver Detalles</span>
+                    </div>
+                </div>`;
+                grid.innerHTML += card;
+            });
+            lucide.createIcons();
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            galleryImages.forEach((img, idx) => {
+                const card = `
+                <div class="aspect-square bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden hover:border-blue-500/50 transition relative group cursor-pointer" onclick="window.open('${img}', '_blank')">
+                    <img src="${img}" alt="Trabajo ${idx}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition duration-500" loading="lazy" />
+                </div>`;
+                grid.innerHTML += card;
+            });
+        }
+
+        function filterProducts(category) {
+            renderProducts(category);
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => { btn.className = "filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-600 hover:text-white flex items-center gap-1"; });
+            event.currentTarget.className = "filter-btn active px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-800 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] flex items-center gap-1";
+            lucide.createIcons();
+        }
+
+        const modal = document.getElementById('product-modal');
+        const modalContent = document.getElementById('modal-content');
+        
+        function openProductModal(id) {
+            const product = products.find(p => p.id === id);
+            if(!product) return;
+            document.getElementById('modal-img').src = product.image;
+            document.getElementById('modal-img').className = "w-full h-full object-contain relative z-10 p-4 bg-black/50";
+            document.getElementById('modal-cat').textContent = product.category;
+            document.getElementById('modal-cat').className = "text-xs font-bold uppercase tracking-widest px-3 py-1 rounded border border-blue-900/50 text-blue-400 bg-blue-900/20";
+            document.getElementById('modal-title').textContent = product.title;
+            document.getElementById('modal-price').textContent = product.price;
+            document.getElementById('modal-desc').textContent = product.desc;
+            document.getElementById('modal-btn-text').textContent = "Cotizar este producto";
+            document.getElementById('modal-btn').onclick = () => openWhatsApp(product.title);
+            showModalAnim();
+        }
+
+        function openForjaModal(id) {
+            const forja = forjas.find(f => f.id === id);
+            if(!forja) return;
+            if(forja.image) {
+                document.getElementById('modal-img').src = forja.image;
+                document.getElementById('modal-img').className = "w-full h-full object-cover relative z-10";
+            } else {
+                document.getElementById('modal-img').src = forja.logo;
+                document.getElementById('modal-img').className = "w-full h-full object-contain relative z-10 p-12 bg-black/80 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]";
+            }
+            document.getElementById('modal-cat').textContent = "Línea de Diseño Original";
+            document.getElementById('modal-cat').className = "text-xs font-bold uppercase tracking-widest px-3 py-1 rounded border border-purple-900/50 text-purple-400 bg-purple-900/20";
+            document.getElementById('modal-title').textContent = forja.name;
+            document.getElementById('modal-price').textContent = "Bajo Pedido";
+            document.getElementById('modal-desc').innerHTML = `${forja.desc}<br><br><span class="text-sm text-slate-400 italic">Esta es una de nuestras líneas de diseño exclusivas. Puedes explorar todos los modelos en nuestros repositorios web o pedirnos la impresión física.</span>`;
+            document.getElementById('modal-btn-text').textContent = "Cotizar impresión de esta Forja";
+            document.getElementById('modal-btn').onclick = () => openWhatsApp(forja.name, `Hola, me interesa cotizar la impresión física de un modelo de tu línea exclusiva: ${forja.name}`);
+            showModalAnim();
+        }
+
+        function showModalAnim() {
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); modalContent.classList.add('scale-100'); }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); document.body.style.overflow = 'auto'; }, 300);
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        window.onload = () => { renderProducts(); renderForjas(); renderGallery(); };
+    </script>
+</body>
+</html>
