@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pendragon Forge | Impresión 3D y Ecosistema Maker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#050510',
+                            card: 'rgba(15, 23, 42, 0.5)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Merriweather:wght@400;700;900&display=swap');
+        
+        body {
+            background-color: #050510;
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .font-serif { font-family: 'Merriweather', serif; }
+
+        /* Efectos de fondo */
+        .bg-grid {
+            background-image: linear-gradient(rgba(59, 130, 246, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(220, 38, 38, 0.15) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Utilidades para ocultar/mostrar */
+        .hidden { display: none !important; }
+        
+        /* Animaciones básicas */
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        .animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        /* Ocultar scrollbar pero permitir scroll */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Clases para animación al hacer scroll */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Animaciones Oráculo IA */
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spin-reverse { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+        .animate-spin-slow { animation: spin-slow 8s linear infinite; }
+        .animate-spin-reverse { animation: spin-reverse 12s linear infinite; }
+        .animate-spin-slow-2 { animation: spin-slow 6s linear infinite; }
+        
+        /* Modal Lore Animación */
+        .lore-enter { animation: loreFadeIn 0.4s ease-out forwards; }
+        .lore-exit { animation: loreFadeOut 0.3s ease-in forwards; }
+        @keyframes loreFadeIn { from { opacity: 0; transform: scale(0.98) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes loreFadeOut { from { opacity: 1; transform: scale(1) translateY(0); } to { opacity: 0; transform: scale(0.98) translateY(20px); } }
+    </style>
+</head>
+<body class="selection:bg-red-500 selection:text-white pb-20 md:pb-0 relative">
+
+    <!-- DATA -->
+    <script>
+        const BRAND = {
+            whatsapp: "522221236293",
+            social: {
+                tiktok: "https://www.tiktok.com/@pendragonforge3d",
+                youtube: "https://youtube.com",
+                instagram: "https://instagram.com",
+                facebook: "https://facebook.com"
+            },
+            profiles: {
+                makerworld: "https://makerworld.com/es/@PENDRAGON3D/upload",
+                cults: "https://cults3d.com/es/usuarios/PENDRAGON3D/modelos-3d"
+            }
+        };
+
+        // 👇👇👇 AQUÍ PUEDES AGREGAR O QUITAR PRODUCTOS AL CATÁLOGO 👇👇👇
+        // Para agregar uno nuevo, solo copia una línea, pégala abajo y cambia los datos.
+        // Categorías válidas: "decoracion", "funcional", "servicio"
+        const products = [
+            { id: 1, title: "Mini Cámara Retro Porta-Foto", category: "decoracion", price: "$60 MXN", image: "https://i.imgur.com/3D7fFjM.jpeg", desc: "Llavero funcional con diseño de cámara vintage. Cuenta con ranura para foto real.", isNew: true },
+            { id: 2, title: "Cascos y Props Cosplay", category: "decoracion", price: "Cotizar", image: "https://i.postimg.cc/HxThCkdj/cascos-impresos-y-pintados.jpg", desc: "Fabricación a escala real de cascos y armaduras. Entregamos en crudo o pintados.", isNew: true },
+            { id: 3, title: "Organizador Hot Wheels", category: "funcional", price: "Cotizar", image: "https://i.postimg.cc/9XJvCZ4H/coleccionador-hotwheels.jpg", desc: "Display modular tipo panal para carritos de colección escala 1:64.", isNew: false },
+            { id: 4, title: "Dragón y Dinosaurios Flexi", category: "decoracion", price: "Desde $150 MXN", image: "https://i.postimg.cc/MTzF8pqD/dragon-flexi.jpg", desc: "Figuras articuladas impresas en una pieza. Colores duales y metalizados.", isNew: false },
+            { id: 5, title: "Minis para Juegos de Mesa", category: "servicio", price: "Desde $30 MXN", image: "https://i.postimg.cc/x8CpcpkV/minis-helldivers.jpg", desc: "Alta resolución para D&D, Warhammer, etc. Detalle milimétrico listos para pintar.", isNew: false },
+            { id: 6, title: "Soporte Gamer", category: "funcional", price: "Desde $250 MXN", image: "https://i.postimg.cc/26TXjN5R/soporte-control-deriva.jpg", desc: "Soportes temáticos para controles de Xbox, PlayStation o Nintendo.", isNew: false },
+            { id: 7, title: "Figuras Pokémon", category: "decoracion", price: "Desde $25 MXN", image: "https://i.postimg.cc/mDT5GgBV/coleccion-pokemon-a-color-151.jpg", desc: "Modelos multicolores. El color es plástico real, sin pintura que se descarape.", isNew: false },
+            { id: 8, title: "Llaveros 3D Personalizados", category: "decoracion", price: "Desde $35 MXN", image: "https://i.postimg.cc/tJSfkG0d/llaveros-multicolor-3d.jpg", desc: "Llaveros con volumen impresos en varios colores. Ideal para souvenirs o logos.", isNew: false },
+            { id: 9, title: "Porta Llaves Garage", category: "funcional", price: "$180 MXN", image: "https://i.postimg.cc/bJqBjwpv/porta-llaves-garage1.jpg", desc: "Organizador simulando bujías y conectores. Impresión en PETG resistente.", isNew: false },
+            { id: 10, title: "Colección Yu-Gi-Oh! x Sanrio", category: "decoracion", price: "$325 MXN", image: "https://i.postimg.cc/C51rzrZK/yugioh-x-sanryo.jpg", desc: "Colección completa de figuras crossover impresas a todo color. Perfectas para escritorio.", isNew: true },
+            { id: 11, title: "Set Eevee y Evoluciones", category: "decoracion", price: "$450 MXN", image: "https://i.postimg.cc/C51rzrZT/pokemon-eevelutions.jpg", desc: "Incluye a Eevee y sus 3 primeras evoluciones clásicas. Impresión 3D multicolor lista para exhibir.", isNew: true }
+        ];
+        // 👆👆👆 FIN DE PRODUCTOS 👆👆👆
+
+        const forjas = [
+            { id: 'aeonhammer', name: "Aeonhammer", logo: "https://i.postimg.cc/d367SnnG/aeonhammer.png", desc: "Armamento y utilería de ciencia ficción de eras futuras." },
+            { id: 'alcancias', name: "Alcancías 3D", logo: "https://i.postimg.cc/Y0R4y88z/alcancias-3d.png", desc: "Colección de alcancías personalizadas y temáticas." },
+            { id: 'aptica', name: "APTICA Studio", logo: "https://i.postimg.cc/c1B8H4ZZ/APTICA-Neural-Craft-Studio.png", desc: "Diseños generativos, geométricos y experimentales." },
+            { id: 'arcano', name: "Arcano Gear", logo: "https://i.postimg.cc/ZRrv6Jd6/ARCANOGEAR-FORGE-RELIC-PROTOCOL.png", image: "https://i.postimg.cc/hPY67n1G/ARCANOGEAR-FORGE-RELIC-PROTOCOL-1.jpg", desc: "Fusión de ingeniería arcana y estética steampunk." },
+            { id: 'astral', name: "Astral Armor Atelier", logo: "https://i.postimg.cc/gjswB44M/astral-armor-atelier.png", desc: "Forja de armaduras espaciales y de fantasía estelar." },
+            { id: 'booked', name: "Booked 3D", logo: "https://i.postimg.cc/KjfKsQQs/booked-3d.png", image: "https://i.postimg.cc/59nZbLH5/booked-3d-1.jpg", desc: "Separadores y accesorios para tu biblioteca." },
+            { id: 'capsule', name: "Capsule Factory", logo: "https://i.postimg.cc/rm6tdDKR/capsule-factory.png", desc: "Pequeños coleccionables y juguetes sorpresa encapsulados." },
+            { id: 'cartoon', name: "Cartoon Vanguard", logo: "https://i.postimg.cc/mkjc6VV8/CARTOON-VANGUARD-COLLECTIBLES.png", image: "https://i.postimg.cc/xTZhbQ3f/CARTOON-VANGUARD-COLLECTIBLES.jpg", desc: "Coleccionables cartoon con acabados dinámicos." },
+            { id: 'celestial', name: "Celestial Helmforge", logo: "https://i.postimg.cc/wM2tbFFw/celestial-helmforge.png", desc: "Cascos divinos, coronas y tocados cósmicos." },
+            { id: 'chimera', name: "Chimera Forge", logo: "https://i.postimg.cc/Ss0zXnJM/chimera-forge.png", image: "https://i.postimg.cc/QdWPQzfm/chimera-forge-1.jpg", desc: "Modelado 3D de armamento y props para cosplay." },
+            { id: 'crownclash', name: "Crownclash Forge", logo: "https://i.postimg.cc/yxjJrnnZ/crownclash-forge.png", image: "https://i.postimg.cc/1RJLswg5/crownclash-forge1.jpg", desc: "Armaduras, coronas y utilería digna de la realeza." },
+            { id: 'crownforge', name: "Crownforge", logo: "https://i.postimg.cc/wvKst17N/crownforge.png", image: "https://i.postimg.cc/MKHgTHR1/crownforge-1.jpg", desc: "Accesorios para cosplay de alta realeza y fantasía." },
+            { id: 'daemonic', name: "Daemonic Foundry", logo: "https://i.postimg.cc/d1MT7hL1/DAEMONIC-FOUNDRY.png", image: "https://i.postimg.cc/65qF3qRd/DAEMONIC-FOUNDRY-1.jpg", desc: "Miniaturas de alta fantasía oscura y demoníaca." },
+            { id: 'dinomachina', name: "Dino Machina", logo: "https://i.postimg.cc/50cFHX64/dinomachina.png", image: "https://i.postimg.cc/3w5qnZq2/dinomachina-1.jpg", desc: "Kits de mechas y bestias prehistóricas sin soportes." },
+            { id: 'duelforge', name: "Duelforge Archives", logo: "https://i.postimg.cc/qRfCtNzk/duelforge-monster-archives.png", desc: "Accesorios y cajas deck para juegos de cartas (TCG)." },
+            { id: 'evolveforge', name: "Evolveforge", logo: "https://i.postimg.cc/fbS9TcTz/evolveforge.png", desc: "Criaturas mutantes y diseños orgánicos evolutivos." },
+            { id: 'forgedisplay', name: "Forge Display", logo: "https://i.postimg.cc/7LJ2Y3YL/forge-display.png", desc: "Bases, soportes y dioramas para exhibir tu colección." },
+            { id: 'fragmentos', name: "Fragmentos del Velo", logo: "https://i.postimg.cc/4dzHpX9P/fragmentos-del-velo.png", image: "https://i.postimg.cc/Mpj47L9K/fragmentos-del-velo-1.jpg", desc: "Colección mística de artefactos y misterios." },
+            { id: 'galaxy', name: "Galaxyforge", logo: "https://i.postimg.cc/YSLWq6qK/GALAXYFORGE.png", image: "https://i.postimg.cc/fR0FcP8V/GALAXYFORGE-1.jpg", desc: "Vehículos y naves espaciales de ciencia ficción." },
+            { id: 'glasscut', name: "Glasscut", logo: "https://i.postimg.cc/nL9Dc4VN/glasscut.png", desc: "Proyectos y diseños orientados a corte láser en acrílico." },
+            { id: 'grimforge', name: "Grimforge Protocol", logo: "https://i.postimg.cc/y6ySdYBK/GRIMFORGE-WAR-KNIGHT-PROTOCOL.png", desc: "Caballeros de guerra y protocolos mecha oscuros." },
+            { id: 'hexamorph', name: "Hexamorph Forge", logo: "https://i.postimg.cc/HL8yswWR/HEXAMORPH-FORGE.png", desc: "Sistemas modulares y organizadores hexagonales." },
+            { id: 'iconhelms', name: "Iconhelms Legions", logo: "https://i.postimg.cc/vTbgzC74/iconhelms-legions.png", desc: "Los cascos más icónicos de la cultura pop y videojuegos." },
+            { id: 'ixtlium', name: "Ixtlium Forge", logo: "https://i.postimg.cc/JhHk4N72/ixtlium-forge.png", desc: "Fusión de estética prehispánica/azteca con cyberpunk." },
+            { id: 'knightmare', name: "Knightmare Forge", logo: "https://i.postimg.cc/3w0vJXrb/knightmare-forge.png", image: "https://i.postimg.cc/rwtb1Hft/knightmare-forge.jpg", desc: "Monstruosidades biomecánicas de pesadilla." },
+            { id: 'mechabestiary', name: "Mechabestiary", logo: "https://i.postimg.cc/Qdy734sL/MECHABESTIARY-FORGE.png", desc: "Bestiario completo de animales robóticos y mechas." },
+            { id: 'metalprehistoria', name: "Metal Prehistoria", logo: "https://i.postimg.cc/kgpSm1Ch/metal-prehistoria.png", desc: "Dinosaurios e insectos gigantes con armamento." },
+            { id: 'mexiconic', name: "Mexiconic Toyforge", logo: "https://i.postimg.cc/Qdy734DR/MEXICONIC-TOYFORGE.png", desc: "Juguetes y figuras inspiradas en la cultura de México." },
+            { id: 'minimotor', name: "Minimotor Works", logo: "https://i.postimg.cc/mg59sX4p/minimotor-works.png", desc: "Motores, engranes y modelos de vehículos a escala." },
+            { id: 'multichibi', name: "Multichibicore", logo: "https://i.postimg.cc/NjzXcJtk/multichibicore.png", image: "https://i.postimg.cc/Pf2BTYLL/multichibicore-1.jpg", desc: "Personajes reinterpretados en formato chibi adorable." },
+            { id: 'obsidian', name: "Obsidian Legends", logo: "https://i.postimg.cc/52RzV7Jw/OBSIDIANFORGE-ANCESTRAL-STL-LEGENDS.png", image: "https://i.postimg.cc/m2kKDkM8/OBSIDIANFORGE-ANCESTRAL-STL-LEGENDS-1.jpg", desc: "Esculturas de gran formato con texturas en piedra." },
+            { id: 'popform', name: "Popform Forge", logo: "https://i.postimg.cc/Sxs9H0BW/popform-forge.png", desc: "Figuras y bustos de íconos de la cultura pop actual." },
+            { id: 'sigilforge', name: "Sigilforge", logo: "https://i.postimg.cc/cLb3S9WM/sigilforge.png", desc: "Sellos, tokens, monedas y reliquias de escritorio." },
+            { id: 'silhouette', name: "Silhouetteforge", logo: "https://i.postimg.cc/mgD9KxvM/SILHOUETTEFORGE-STL-MONSTER-FUSIONS.png", desc: "Fusiones monstruosas y sombras hechas 3D." },
+            { id: 'spartan', name: "Spartan Legion", logo: "https://i.postimg.cc/XYJ5tMRy/spartan-legion.png", image: "https://i.postimg.cc/28yg6yvX/spartan-legion-1.jpg", desc: "Homenaje a los guerreros del espacio." },
+            { id: 'threadforge', name: "Threadforge", logo: "https://i.postimg.cc/4xdcjCDm/THREADFORGE-KNITTED-STL-LEGENDS.png", image: "https://i.postimg.cc/L6WwZSBG/THREADFORGE-KNITTED-STL-LEGENDS-1.jpg", desc: "Texturas que simulan tejido en plástico sólido." },
+            { id: 'triform', name: "Triform Toyforge", logo: "https://i.postimg.cc/nhzmN8yH/triform-toyforge.png", desc: "Juguetes articulados con múltiples transformaciones." },
+            { id: 'vixen', name: "Vixen Forge", logo: "https://i.postimg.cc/bwJn4X7D/vixen-forge.png", desc: "Esculturas y armaduras enfocadas en personajes femeninos." },
+            { id: 'wardenbeast', name: "Wardenbeast Atlas", logo: "https://i.postimg.cc/NjzXcJtb/WARDENBEAST-ATLAS.png", desc: "Bestias guardianes de gran escala para proteger tu repisa." },
+            { id: 'warframeops', name: "Warframe Ops", logo: "https://i.postimg.cc/KcDgzvFZ/warframe-ops.png", image: "https://i.postimg.cc/Mpj47L9V/warframe-ops-1.jpg", desc: "Equipamiento táctico de operaciones especiales." }
+        ];
+
+        const galleryImages = [
+            "https://i.postimg.cc/MHT3v3cM/impresion-venator-pintado.jpg",
+            "https://i.postimg.cc/rsmZKZd4/casco-pintado-star-wars.jpg",
+            "https://i.postimg.cc/y6vwscJN/figuras-yugioh-1.jpg",
+            "https://i.postimg.cc/qRp5dv4n/san-pikachu.jpg",
+            "https://i.postimg.cc/DZ7MKwnP/flexi-esqueleto-dino.jpg",
+            "https://i.postimg.cc/cC9jhGqg/figuras-halo-pintadas.jpg",
+            "https://i.postimg.cc/C51rzrZT/pokemon-eevelutions.jpg",
+            "https://i.postimg.cc/C51rzrZK/yugioh-x-sanryo.jpg"
+        ];
+    </script>
+
+    <!-- BANNER PROMO -->
+    <div id="promo-banner" class="bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900 text-white text-xs md:text-sm py-2 px-4 text-center relative z-[60]">
+        <span class="font-bold tracking-wider flex items-center justify-center gap-2">
+            <i data-lucide="sparkles" class="w-4 h-4 text-yellow-400"></i>
+            ¡OFERTA DE LANZAMIENTO! 10% DE DESCUENTO EN TU PRIMER PEDIDO
+            <i data-lucide="sparkles" class="w-4 h-4 text-yellow-400"></i>
+        </span>
+        <button onclick="document.getElementById('promo-banner').style.display='none'" class="absolute right-2 top-1/2 -translate-y-1/2 text-white/50 hover:text-white">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+    </div>
+
+    <!-- HEADER DINÁMICO -->
+    <header id="main-header" class="fixed top-0 w-full z-50 transition-all duration-300 bg-transparent py-3">
+        <div class="container mx-auto px-4 flex justify-between items-center bg-[#050510]/80 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-lg p-2 md:p-3 mt-2">
+            <!-- Logo (Asegúrate de que 'logo.jpg' esté en la misma carpeta al subir a Vercel) -->
+            <div class="flex items-center space-x-3 group cursor-pointer pl-2" onclick="window.scrollTo(0,0)">
+                <img src="logo.jpg" alt="Logo Pendragon Forge" class="h-10 w-10 md:h-12 md:w-12 object-cover rounded-lg border border-yellow-500/30 hover:scale-105 transition shadow-[0_0_10px_rgba(212,160,23,0.3)]" onerror="this.src='https://i.imgur.com/J5efweH.png'" />
+                <div>
+                    <h1 class="text-base md:text-xl font-black tracking-tighter text-white font-serif tracking-widest leading-none flex flex-col group-hover:text-blue-200 transition">
+                        <span>PENDRAGON</span>
+                        <span class="text-[9px] md:text-xs text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-red-500 font-sans tracking-[0.3em]">FORGE STUDIOS</span>
+                    </h1>
+                </div>
+            </div>
+            
+            <!-- Desktop Nav -->
+            <nav class="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-bold text-slate-300 pr-2">
+                <a href="#servicios" class="hover:text-blue-400 transition flex items-center gap-1"><i data-lucide="hammer" class="w-4 h-4"></i> Taller</a>
+                <a href="#catalogo" class="hover:text-blue-400 transition flex items-center gap-1"><i data-lucide="box" class="w-4 h-4"></i> Catálogo</a>
+                <a href="#tiendas" class="hover:text-green-400 transition flex items-center gap-1"><i data-lucide="shopping-bag" class="w-4 h-4"></i> Tiendas</a>
+                <a href="#estudio" class="hover:text-fuchsia-400 transition flex items-center gap-1"><i data-lucide="sparkles" class="w-4 h-4"></i> Estudio & Lore</a>
+                <a href="#nosotros" class="hover:text-white transition">Nosotros</a>
+                <button onclick="openWhatsApp()" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 border border-green-400/30 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:scale-105">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i> Cotizar
+                </button>
+            </nav>
+
+            <!-- Mobile Menu Toggle -->
+            <button class="lg:hidden text-white p-2 mr-2" onclick="toggleMobileMenu()">
+                <i data-lucide="menu" id="menu-icon"></i>
+            </button>
+        </div>
+
+        <!-- Mobile Nav Dropdown -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-[#050510]/95 backdrop-blur-xl border border-slate-800 px-4 py-4 flex flex-col gap-4 absolute w-[95%] left-1/2 -translate-x-1/2 top-[80px] shadow-2xl rounded-2xl">
+            <a href="#servicios" onclick="toggleMobileMenu()" class="text-left font-bold text-slate-300 flex items-center gap-2"><i data-lucide="hammer" class="w-5 h-5"></i> Nuestro Taller</a>
+            <a href="#catalogo" onclick="toggleMobileMenu()" class="text-left font-bold text-blue-400 flex items-center gap-2"><i data-lucide="box" class="w-5 h-5"></i> Catálogo Físico</a>
+            <a href="#tiendas" onclick="toggleMobileMenu()" class="text-left font-bold text-green-400 flex items-center gap-2"><i data-lucide="shopping-bag" class="w-5 h-5"></i> Tiendas Digitales</a>
+            <a href="#estudio" onclick="toggleMobileMenu()" class="text-left font-bold text-fuchsia-400 flex items-center gap-2"><i data-lucide="sparkles" class="w-5 h-5"></i> Estudio, Lore y Apps</a>
+            <a href="#faq" onclick="toggleMobileMenu()" class="text-left font-bold text-slate-300 flex items-center gap-2"><i data-lucide="help-circle" class="w-5 h-5"></i> Preguntas Frecuentes</a>
+            <a href="#nosotros" onclick="toggleMobileMenu()" class="text-left font-bold text-white flex items-center gap-2"><i data-lucide="user" class="w-5 h-5"></i> Sobre Nosotros</a>
+            <button onclick="openWhatsApp()" class="bg-green-600 text-white py-3 rounded-lg font-bold flex justify-center items-center gap-2 mt-2">
+                <i data-lucide="message-circle" class="w-5 h-5"></i> Contactar por WhatsApp
+            </button>
+        </div>
+    </header>
+
+    <!-- HERO -->
+    <div class="relative bg-[#050510] pt-40 pb-20 md:py-40 overflow-hidden">
+        <div class="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow"></div>
+        <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-red-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow" style="animation-delay: 1s"></div>
+        <div class="absolute inset-0 opacity-20 bg-grid"></div>
+
+        <div class="container mx-auto px-4 text-center relative z-10 reveal">
+            <div class="inline-flex items-center gap-2 py-1 px-4 rounded-full bg-slate-900/80 border border-slate-700 text-blue-300 text-xs font-bold mb-8 backdrop-blur-sm shadow-xl hover:scale-105 transition cursor-default">
+                <i data-lucide="crown" class="w-3 h-3 text-red-500"></i>
+                <span class="tracking-widest uppercase">Calidad & Pasión Maker</span>
+            </div>
+            
+            <h2 class="text-5xl md:text-7xl font-black mb-4 tracking-tight text-white drop-shadow-2xl">
+                DE TU IMAGINACIÓN<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">A LA VIDA REAL</span>
+            </h2>
+            <p class="text-xl md:text-2xl text-slate-300 font-bold mb-10 tracking-wide">
+                IMPRESIÓN 3D & CORTE LÁSER
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button onclick="openWhatsApp(null, 'Hola, me gustaría cotizar un proyecto.')" class="group px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-bold transition-all shadow-[0_0_20px_rgba(147,51,234,0.4)] flex items-center justify-center gap-2 hover:scale-105">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-yellow-300 group-hover:rotate-12 transition-transform"></i> Iniciar un Proyecto
+                </button>
+                <a href="#catalogo" class="px-8 py-4 bg-slate-800/80 backdrop-blur border border-slate-600 text-white rounded-lg font-bold hover:bg-slate-700 transition flex items-center justify-center gap-2 hover:-translate-y-1">
+                    <i data-lucide="box" class="w-5 h-5"></i> Ver Catálogo Físico
+                </a>
+            </div>
+
+            <!-- HERO STATS -->
+            <div class="mt-16 grid grid-cols-2 md:grid-cols-5 gap-4 border border-slate-800/50 pt-6 pb-6 max-w-4xl mx-auto bg-slate-900/30 rounded-3xl backdrop-blur-sm shadow-2xl">
+                <div class="text-center md:border-r border-slate-800/50 last:border-0"><span class="block text-2xl font-black text-blue-400">+5K</span><span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Hrs Impresión</span></div>
+                <div class="text-center md:border-r border-slate-800/50 last:border-0"><span class="block text-2xl font-black text-purple-400">+200</span><span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Proyectos</span></div>
+                <div class="text-center md:border-r border-slate-800/50 last:border-0"><span class="block text-2xl font-black text-red-400">40</span><span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Universos</span></div>
+                <div class="text-center md:border-r border-slate-800/50 last:border-0"><span class="block text-2xl font-black text-green-400">v3.5</span><span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Reglamento</span></div>
+                <div class="text-center last:border-0"><span class="block text-2xl font-black text-yellow-400">11</span><span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">STLs Cults</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: EL PROCESO DE PEDIDO (Completo 4 pasos) -->
+    <div class="container mx-auto px-4 relative z-20 -mt-10 reveal">
+        <section class="py-12 border border-slate-800 bg-gradient-to-b from-[#0a0a15] to-[#050510] rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            <div class="text-center mb-10 relative z-10">
+                <h3 class="text-2xl md:text-3xl font-black text-white font-serif flex items-center justify-center gap-3">
+                    <i data-lucide="zap" class="w-6 h-6 text-yellow-500"></i> EL PROCESO DE PEDIDO
+                </h3>
+                <p class="text-slate-400 mt-2 text-sm">Rápido, sencillo y directo. Sin formularios complicados.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto relative px-6 z-10">
+                <!-- Paso 1 -->
+                <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 text-center hover:-translate-y-1 transition group">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-blue-900/30 flex items-center justify-center mb-4 text-blue-400 font-black text-lg border border-blue-500/30">1</div>
+                    <h4 class="font-bold text-white mb-2 text-sm uppercase">Elige tu Artefacto</h4>
+                    <p class="text-slate-400 text-xs leading-relaxed">Del catálogo, Cults3D, MakerWorld o trae tu propia idea. Te asesoramos sin costo.</p>
+                </div>
+                <!-- Paso 2 -->
+                <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 text-center hover:-translate-y-1 transition group">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-green-900/30 flex items-center justify-center mb-4 text-green-400 font-black text-lg border border-green-500/30">2</div>
+                    <h4 class="font-bold text-white mb-2 text-sm uppercase">Envía a la Forja</h4>
+                    <p class="text-slate-400 text-xs leading-relaxed">Manda el link, captura o tu idea al WhatsApp. Respondemos sin bots, trato directo y humano.</p>
+                </div>
+                <!-- Paso 3 -->
+                <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 text-center hover:-translate-y-1 transition group">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-purple-900/30 flex items-center justify-center mb-4 text-purple-400 font-black text-lg border border-purple-500/30">3</div>
+                    <h4 class="font-bold text-white mb-2 text-sm uppercase">Cotización y Pago</h4>
+                    <p class="text-slate-400 text-xs leading-relaxed">Precio final y tiempo de entrega sin sorpresas. Transferencia, Mercado Pago u OXXO.</p>
+                </div>
+                <!-- Paso 4 -->
+                <div class="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 text-center hover:-translate-y-1 transition group">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-red-900/30 flex items-center justify-center mb-4 text-red-400 font-black text-lg border border-red-500/30">4</div>
+                    <h4 class="font-bold text-white mb-2 text-sm uppercase">La Forja Actúa</h4>
+                    <p class="text-slate-400 text-xs leading-relaxed">Fabricamos con cuidado personal. Te mandamos foto del terminado antes de enviar a todo México.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <main class="container mx-auto px-4 relative mt-16">
+        
+        <!-- SECCIÓN: SERVICIOS (Taller Físico) -->
+        <section id="servicios" class="py-16 border-b border-slate-800/50 reveal">
+            <div class="text-center mb-12">
+                <div class="inline-flex items-center gap-2 text-blue-400 text-xs font-bold mb-4 tracking-widest uppercase bg-blue-900/20 px-3 py-1 rounded-full border border-blue-900/50">
+                    <i data-lucide="hammer" class="w-3 h-3"></i> Taller Físico
+                </div>
+                <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-4">NUESTROS SERVICIOS</h3>
+                <p class="text-slate-400 max-w-2xl mx-auto">Calidad y pasión maker. Cada pieza es revisada personalmente por el maestro forjador. Sin defectos de capa, sin sorpresas.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Impresión 3D -->
+                <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 hover:border-blue-500/50 transition group hover:-translate-y-2 shadow-lg flex flex-col">
+                    <div class="w-14 h-14 bg-blue-900/20 rounded-xl flex items-center justify-center mb-6 border border-blue-500/30 group-hover:scale-110 transition">
+                        <i data-lucide="printer" class="text-blue-400 w-7 h-7"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2 uppercase tracking-wide">Impresión 3D FDM</h4>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Prototipos, funcionales, decoración y props. Equipos de alta gama con multicolor AMS y precisión extrema.</p>
+                    <div class="flex flex-wrap gap-2 mt-auto"><span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">PLA / PETG / ABS</span></div>
+                </div>
+                
+                <!-- Corte Láser -->
+                <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 hover:border-red-500/50 transition group hover:-translate-y-2 shadow-lg flex flex-col">
+                    <div class="w-14 h-14 bg-red-900/20 rounded-xl flex items-center justify-center mb-6 border border-red-500/30 group-hover:scale-110 transition">
+                        <i data-lucide="zap" class="text-red-400 w-7 h-7"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2 uppercase tracking-wide">Corte Láser</h4>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Lettering, señalética, cajas MDF y grabado de alta precisión en madera, acrílico y cuero.</p>
+                    <div class="flex flex-wrap gap-2 mt-auto"><span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">MDF 3mm - 6mm</span></div>
+                </div>
+                
+                <!-- Minis Personalizadas -->
+                <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 hover:border-purple-500/50 transition group hover:-translate-y-2 shadow-lg flex flex-col">
+                    <div class="w-14 h-14 bg-purple-900/20 rounded-xl flex items-center justify-center mb-6 border border-purple-500/30 group-hover:scale-110 transition">
+                        <i data-lucide="user-circle" class="text-purple-400 w-7 h-7"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2 uppercase tracking-wide">Minis Chibi</h4>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Tu personaje o mascota en miniatura 3D. Desde la imagen de referencia hasta la pieza terminada.</p>
+                    <div class="flex flex-wrap gap-2 mt-auto"><span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">Diseño Personalizado</span></div>
+                </div>
+                
+                <!-- Cartas TCG -->
+                <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 hover:border-green-500/50 transition group hover:-translate-y-2 shadow-lg flex flex-col">
+                    <div class="w-14 h-14 bg-green-900/20 rounded-xl flex items-center justify-center mb-6 border border-green-500/30 group-hover:scale-110 transition">
+                        <i data-lucide="layers" class="text-green-400 w-7 h-7"></i>
+                    </div>
+                    <h4 class="text-lg font-bold text-white mb-2 uppercase tracking-wide">Fichas TCG</h4>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Fichas, contadores, cajas y accesorios impresos en 3D para tus juegos de mesa y cartas coleccionables favoritos.</p>
+                    <div class="flex flex-wrap gap-2 mt-auto"><span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-1 rounded border border-slate-700">Accesorios Premium</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: CATÁLOGO FÍSICO -->
+        <section id="catalogo" class="py-24 scroll-mt-24 border-b border-slate-800/50 reveal">
+            <div class="w-full text-center mb-12">
+                <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-4">CATÁLOGO DE ARTEFACTOS</h3>
+                <p class="text-slate-500 text-lg">Nuestros productos estrella listos para forjar y enviar a todo México.</p>
+            </div>
+            
+            <!-- Filtros UI -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-12" id="filter-container">
+               <button onclick="filterProducts('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-800 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] transition">Todo</button>
+               <button onclick="filterProducts('decoracion')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="box" class="w-4 h-4"></i> Decoración</button>
+               <button onclick="filterProducts('funcional')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="hammer" class="w-4 h-4"></i> Resistente</button>
+               <button onclick="filterProducts('servicio')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="settings" class="w-4 h-4"></i> Especial</button>
+            </div>
+
+            <!-- Grid de Productos -->
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN: CATÁLOGO GLOBAL / TIENDAS DIGITALES -->
+        <section id="tiendas" class="py-24 border-b border-slate-800/50 scroll-mt-24 reveal bg-[#0a0a15] rounded-3xl my-12 shadow-2xl px-6 relative overflow-hidden">
+            <div class="absolute inset-0 bg-grid opacity-20 pointer-events-none"></div>
+            <div class="text-center mb-12 relative z-10">
+                <div class="inline-flex items-center gap-2 text-green-400 text-xs font-bold mb-4 tracking-widest uppercase bg-green-900/20 px-3 py-1 rounded-full border border-green-900/50">
+                    <i data-lucide="globe" class="w-3 h-3"></i> Nube Maker
+                </div>
+                <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-4">REPOSITORIOS Y TIENDAS</h3>
+                <p class="text-slate-400 max-w-2xl mx-auto text-lg">Descarga nuestros modelos 3D (STLs) para imprimirlos en tu casa, o cómpranos de forma directa y segura.</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto relative z-10">
+                <!-- Cults3D -->
+                <div class="bg-[#050510] border border-slate-800 p-8 rounded-2xl hover:border-green-500/50 transition group hover:-translate-y-2 relative overflow-hidden flex flex-col">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-green-600/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-green-600/20 transition"></div>
+                    <i data-lucide="download-cloud" class="w-10 h-10 text-green-500 mb-6"></i>
+                    <h4 class="text-xl font-black text-white mb-1 uppercase">Cults3D</h4>
+                    <p class="text-xs text-slate-500 font-mono mb-4 truncate">cults3d.com/es/usuarios/PENDRAGON3D</p>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Nuestros STLs premium de pago. Soportes gamer, porta llaves y dioramas listos para rebanar.</p>
+                    <button onclick="window.open('https://cults3d.com/es/usuarios/PENDRAGON3D/modelos-3d', '_blank')" class="w-full py-3 bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white rounded-lg font-bold transition flex items-center justify-center gap-2 border border-green-600/50 mt-auto">Ir a Cults3D <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+                
+                <!-- MakerWorld -->
+                <div class="bg-[#050510] border border-slate-800 p-8 rounded-2xl hover:border-blue-500/50 transition group hover:-translate-y-2 relative overflow-hidden flex flex-col">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-blue-600/20 transition"></div>
+                    <i data-lucide="box" class="w-10 h-10 text-blue-500 mb-6"></i>
+                    <h4 class="text-xl font-black text-white mb-1 uppercase">MakerWorld</h4>
+                    <p class="text-xs text-slate-500 font-mono mb-4 truncate">makerworld.com/es/@PENDRAGON3D</p>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Diseños **100% gratuitos** optimizados para ecosistema Bambu Lab y compatibles con cualquier FDM.</p>
+                    <button onclick="window.open('https://makerworld.com/es/@PENDRAGON3D/upload', '_blank')" class="w-full py-3 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg font-bold transition flex items-center justify-center gap-2 border border-blue-600/50 mt-auto">Descargar Gratis <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+                
+                <!-- TikTok Shop -->
+                <div class="bg-[#050510] border border-slate-800 p-8 rounded-2xl hover:border-red-500/50 transition group hover:-translate-y-2 relative overflow-hidden flex flex-col">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-red-600/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-red-600/20 transition"></div>
+                    <i data-lucide="shopping-bag" class="w-10 h-10 text-red-500 mb-6"></i>
+                    <h4 class="text-xl font-black text-white mb-1 uppercase">TikTok Shop</h4>
+                    <p class="text-xs text-slate-500 font-mono mb-4 truncate">tiktok.com/@pendragonforge3d</p>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Compra física con envío respaldado a todo México y meses sin intereses. Ve nuestros videos de proceso.</p>
+                    <button onclick="window.open('https://www.tiktok.com/@pendragonforge3d', '_blank')" class="w-full py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg font-bold transition flex items-center justify-center gap-2 border border-red-600/50 mt-auto">Ir a TikTok Shop <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+                
+                <!-- WhatsApp -->
+                <div class="bg-[#050510] border border-slate-800 p-8 rounded-2xl hover:border-emerald-500/50 transition group hover:-translate-y-2 relative overflow-hidden flex flex-col">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-600/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-emerald-600/20 transition"></div>
+                    <i data-lucide="message-circle" class="w-10 h-10 text-emerald-500 mb-6"></i>
+                    <h4 class="text-xl font-black text-white mb-1 uppercase">WhatsApp</h4>
+                    <p class="text-xs text-slate-500 font-mono mb-4">52 222 123 6293</p>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Trato directo, humano y sin intermediarios. Ideal para cotizaciones a medida o modificaciones de tamaño.</p>
+                    <button onclick="openWhatsApp()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] mt-auto">Chat Directo <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: PUENTE NARRATIVO Y ESTUDIO CREATIVO (LORE + APPS) -->
+        <section id="estudio" class="scroll-mt-24 pt-24 reveal">
+            <div class="text-center mb-12">
+                <div class="inline-flex items-center gap-2 text-fuchsia-400 text-xs font-bold mb-4 tracking-widest uppercase bg-fuchsia-900/20 px-3 py-1 rounded-full border border-fuchsia-900/50">
+                    <i data-lucide="sparkles" class="w-3 h-3"></i> Pendragon Forge Studios
+                </div>
+                <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-4">MÁS ALLÁ DEL PLÁSTICO</h3>
+                <p class="text-slate-400 max-w-3xl mx-auto text-lg">
+                    No solo somos una imprenta. Somos un estudio independiente desarrollando nuestro propio universo de ciencia ficción, juegos de mesa y herramientas digitales.
+                </p>
+            </div>
+
+            <!-- Call to Action: Códice del Universo -->
+            <div class="max-w-4xl mx-auto bg-[url('https://i.postimg.cc/qRfCtNzk/duelforge-monster-archives.png')] bg-cover bg-center rounded-3xl overflow-hidden relative border border-slate-700 shadow-2xl mb-16">
+                <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+                <div class="relative z-10 p-8 md:p-12 text-center flex flex-col items-center">
+                    <h4 class="text-3xl md:text-4xl font-black text-white mb-4 uppercase tracking-widest">Fragmentos del Velo</h4>
+                    <p class="text-slate-300 max-w-2xl mx-auto mb-8 text-lg">Descubre nuestro Juego de Cartas Coleccionables (TCG). Un universo unificado con 12 Rasgos de Gloria y facciones asimétricas basadas en los 6 Fragmentos.</p>
+                    <button onclick="openLoreModal()" class="px-8 py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.5)] hover:scale-105 flex items-center gap-3">
+                        <i data-lucide="book-open" class="w-5 h-5"></i> Explorar el Códice (Lore)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: NUESTRAS FORJAS (3D Models) -->
+        <section id="forjas" class="py-12 border-b border-slate-800/50 reveal">
+             <div class="text-center mb-10">
+                <h4 class="text-2xl font-bold text-white mb-2">Líneas de Diseño Originales</h4>
+                <p class="text-slate-500 text-sm max-w-2xl mx-auto mb-8">El ecosistema de nuestras propias marcas y coleccionables 3D. Disponibles en Cults y MakerWorld.</p>
+            </div>
+
+            <!-- GRID MOSAICO MASIVO -->
+            <div id="forjas-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-w-7xl mx-auto">
+                <!-- Se llena con JavaScript -->
+            </div>
+        </section>
+
+        <!-- SECCIÓN: ARSENAL DIGITAL Y APPS -->
+        <section id="apps" class="py-24 border-b border-slate-800/50 reveal relative">
+            <div class="text-center mb-16">
+                <h3 class="text-3xl md:text-4xl font-black text-white font-serif mb-4">HERRAMIENTAS DEL UNIVERSO</h3>
+                <p class="text-slate-400 max-w-2xl mx-auto">Software propio para potenciar la experiencia interactiva de Pendragon Forge Studios.</p>
+            </div>
+
+            <!-- Ajuste a 2 columnas para centrar bien tras eliminar el OBS -->
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <!-- Card Editor -->
+                <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 hover:border-cyan-500/50 transition group hover:-translate-y-2 flex flex-col h-full">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-12 h-12 bg-cyan-900/20 rounded-xl flex items-center justify-center border border-cyan-500/30 text-cyan-400"><i data-lucide="layout-template"></i></div>
+                        <span class="text-[9px] font-bold tracking-widest text-green-400 border border-green-500 px-2 py-1 rounded flex items-center gap-1 uppercase"><span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> LIVE v3.4</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-2 uppercase">Web Card Editor</h4>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Crea cartas personalizadas para el TCG online. Exporta en PNG para impresión e integra el sistema de puntos PI automáticamente.</p>
+                    <button onclick="window.open('https://card-editor-zeta.vercel.app/', '_blank')" class="w-full py-3 bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-white rounded-lg font-bold transition flex items-center justify-center gap-2 border border-cyan-600/50 mt-auto">Abrir App <i data-lucide="external-link" class="w-4 h-4"></i></button>
+                </div>
+
+                <!-- Reglamento -->
+                <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 hover:border-yellow-500/50 transition group hover:-translate-y-2 flex flex-col h-full">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-12 h-12 bg-yellow-900/20 rounded-xl flex items-center justify-center border border-yellow-500/30 text-yellow-400"><i data-lucide="book-open"></i></div>
+                        <span class="text-[9px] font-bold tracking-widest text-yellow-400 border border-yellow-500 px-2 py-1 rounded uppercase">v3.5</span>
+                    </div>
+                    <h4 class="text-xl font-bold text-white mb-2 uppercase">Reglamento Core</h4>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Manual digital definitivo con reglas para torneos, creación de unidades balanceadas y campañas narrativas.</p>
+                    <button onclick="openWhatsApp('Quiero el PDF del reglamento TCG')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg font-bold transition border border-slate-600 mt-auto">Pedir PDF (Gratis)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: ORÁCULO (Enviar Idea) -->
+        <section id="oraculo" class="py-24 border-b border-slate-800/50 reveal bg-gradient-to-b from-[#050510] to-[#0a0a1a]">
+            <div class="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto px-4">
+                <div class="order-2 md:order-1">
+                    <div class="inline-flex items-center gap-2 text-fuchsia-400 text-xs font-bold mb-4 tracking-widest uppercase bg-fuchsia-900/20 px-3 py-1 rounded-full border border-fuchsia-900/50">
+                        <i data-lucide="bot" class="w-3 h-3"></i> Inteligencia Forjada
+                    </div>
+                    <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-6">ORÁCULO IA</h3>
+                    <p class="text-slate-400 mb-8 text-lg leading-relaxed">
+                        El <strong class="text-fuchsia-400">Oráculo</strong> es nuestro sistema interno para convertir tus ideas conceptuales en unidades jugables para el TCG. Escribe tu idea aquí y te ayudaremos a generarla y balancearla para el juego.
+                    </p>
+
+                    <!-- Terminal Interactiva (Redirige a WhatsApp) -->
+                    <div class="p-5 border border-fuchsia-900/50 bg-fuchsia-900/10 rounded-xl relative overflow-hidden transition">
+                        <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-fuchsia-500 to-transparent"></div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="terminal" class="text-fuchsia-400 w-5 h-5"></i>
+                                <h5 class="text-fuchsia-400 font-bold uppercase tracking-wide text-sm">Terminal Oráculo</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4 relative z-10">
+                            <textarea id="oracle-prompt" rows="4" placeholder="Ej: Un caballero oscuro con una espada de fuego verde, que sea tanque y absorba daño..." class="w-full bg-black/50 border border-fuchsia-900/50 rounded-lg p-3 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-fuchsia-500 transition resize-none"></textarea>
+
+                            <div id="oracle-error" class="hidden text-red-400 text-xs font-bold text-center bg-red-900/20 p-2 rounded border border-red-900/50"></div>
+
+                            <button type="button" onclick="invocarOraculoWhatsApp()" class="w-full py-3 bg-fuchsia-600 hover:bg-fuchsia-500 text-white rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(217,70,239,0.3)]">
+                                <i data-lucide="send" class="w-4 h-4"></i> Enviar Idea a la Forja
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-1 md:order-2 flex items-center justify-center relative min-h-[450px]">
+                    <!-- Efecto visual Oráculo (Anillos CSS) -->
+                    <div class="relative w-64 h-64 flex items-center justify-center">
+                        <div class="absolute inset-0 border border-fuchsia-500/20 rounded-full animate-spin-slow shadow-[0_0_30px_rgba(217,70,239,0.1)]"></div>
+                        <div class="absolute inset-4 border-2 border-dashed border-blue-500/30 rounded-full animate-spin-reverse"></div>
+                        <div class="absolute inset-8 border border-purple-500/40 rounded-full animate-spin-slow-2"></div>
+                        <div class="absolute inset-14 border border-fuchsia-500/50 rounded-full animate-spin-reverse opacity-50"></div>
+                        
+                        <div class="absolute inset-20 bg-fuchsia-900/20 border-2 border-fuchsia-500/80 rounded-full shadow-[0_0_40px_rgba(217,70,239,0.4),inset_0_0_20px_rgba(217,70,239,0.2)] flex items-center justify-center z-10 backdrop-blur-sm group cursor-pointer hover:scale-105 transition" onclick="document.getElementById('oracle-prompt').focus()">
+                            <span class="font-serif text-sm tracking-[0.2em] text-fuchsia-400 font-bold uppercase drop-shadow-[0_0_10px_rgba(217,70,239,0.8)] group-hover:text-white transition">Oráculo</span>
+                        </div>
+                        <div class="absolute bottom-[-40px] text-[10px] font-mono tracking-widest text-fuchsia-500/70 uppercase">Esperando Entrada</div>
+                    </div>
+                    
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-fuchsia-500/30 to-transparent -z-10"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: GALERÍA Y TESTIMONIOS (GRID) -->
+        <section class="py-24 border-b border-slate-800/50 reveal overflow-hidden">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-black text-white font-serif mb-4 flex items-center justify-center gap-3">
+                   <i data-lucide="camera" class="text-blue-500 w-8 h-8"></i> DEL TALLER AL MUNDO
+                </h3>
+                <p class="text-slate-400 max-w-2xl mx-auto">Nuestros trabajos físicos y la opinión de aventureros satisfechos.</p>
+            </div>
+            
+            <!-- Galería -->
+            <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16 max-w-6xl mx-auto">
+                <!-- Se llena con JavaScript -->
+            </div>
+
+            <!-- Testimonios Grid 3 Columnas -->
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-4">
+                    
+                    <div class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                        <div class="flex gap-1 text-yellow-500 mb-4"><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i></div>
+                        <p class="text-slate-300 italic mb-6 flex-1 text-sm">"Impresionante calidad. Pedí unas minis de D&D y los detalles son perfectos, ideales para pintar. El envío a Monterrey fue rapidísimo."</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">— Marcos T.</p>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                        <div class="flex gap-1 text-yellow-500 mb-4"><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i></div>
+                        <p class="text-slate-300 italic mb-6 flex-1 text-sm">"El porta llaves de mi auto quedó exacto a mi modelo. Armando es un crack, súper atento en todo momento por WhatsApp."</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">— Lucía G.</p>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                        <div class="flex gap-1 text-yellow-500 mb-4"><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i></div>
+                        <p class="text-slate-300 italic mb-6 flex-1 text-sm">"Compré las Eeveelutions enteras. Los colores son vibrantes y el hecho de que sea plástico puro hace que duren muchísimo. Excelente para regalar."</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">— Fernando D.</p>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                        <div class="flex gap-1 text-yellow-500 mb-4"><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i></div>
+                        <p class="text-slate-300 italic mb-6 flex-1 text-sm">"Mandé a hacer un letrero láser para mi negocio en MDF y le dio un toque súper premium. Llegó muy bien empaquetado."</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">— Valeria R.</p>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                        <div class="flex gap-1 text-yellow-500 mb-4"><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i></div>
+                        <p class="text-slate-300 italic mb-6 flex-1 text-sm">"Los soportes para controles tienen un acabado increíble sin líneas feas. Pedí el casco de Ghost de COD y quedó brutal en mi setup."</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">— Jorge M.</p>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-8 rounded-2xl border border-slate-800 hover:border-slate-600 transition flex flex-col">
+                        <div class="flex gap-1 text-yellow-500 mb-4"><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i><i data-lucide="star" class="w-4 h-4 fill-yellow-500"></i></div>
+                        <p class="text-slate-300 italic mb-6 flex-1 text-sm">"La atención es de primera. Me asesoraron con el material ideal para unas piezas mecánicas que necesitaba para mi moto. El PETG aguantó perfecto."</p>
+                        <p class="text-xs font-bold text-white uppercase tracking-wide">— Andrés V.</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: FAQ -->
+        <section id="faq" class="py-24 border-b border-slate-800/50 scroll-mt-24 reveal">
+            <h3 class="text-3xl font-black text-white font-serif mb-12 text-center flex items-center justify-center gap-3">
+                <i data-lucide="help-circle" class="text-blue-500 w-8 h-8"></i> PREGUNTAS FRECUENTES
+            </h3>
+            
+            <div class="max-w-3xl mx-auto space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="border border-slate-800 rounded-xl bg-slate-900/30 overflow-hidden transition-all duration-300 faq-item">
+                    <button class="w-full px-6 py-5 flex justify-between items-center text-left focus:outline-none hover:bg-slate-800/50 transition" onclick="toggleFaq(this)">
+                        <span class="font-bold text-white text-lg">¿Hacen envíos a toda la república?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="px-6 pb-5 text-slate-400 hidden faq-content border-t border-slate-800 pt-4 leading-relaxed">
+                        Sí, realizamos envíos a todo México. Dependiendo de tu código postal, el costo suele rondar entre $100 y $150 MXN por paqueterías seguras como FedEx o Estafeta. Entregas locales en Oaxaca son gratuitas en puntos acordados.
+                    </div>
+                </div>
+                <!-- FAQ Item 2 -->
+                <div class="border border-slate-800 rounded-xl bg-slate-900/30 overflow-hidden transition-all duration-300 faq-item">
+                    <button class="w-full px-6 py-5 flex justify-between items-center text-left focus:outline-none hover:bg-slate-800/50 transition" onclick="toggleFaq(this)">
+                        <span class="font-bold text-white text-lg">¿En qué materiales imprimen?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="px-6 pb-5 text-slate-400 hidden faq-content border-t border-slate-800 pt-4 leading-relaxed">
+                        Principalmente utilizamos PLA+ (ideal para decoración y alta calidad de detalle) y PETG o ABS (para piezas mecánicas o que requieran resistencia al calor y al impacto). Te asesoraremos según lo que necesites.
+                    </div>
+                </div>
+                <!-- FAQ Item 3 -->
+                <div class="border border-slate-800 rounded-xl bg-slate-900/30 overflow-hidden transition-all duration-300 faq-item">
+                    <button class="w-full px-6 py-5 flex justify-between items-center text-left focus:outline-none hover:bg-slate-800/50 transition" onclick="toggleFaq(this)">
+                        <span class="font-bold text-white text-lg">¿Cuánto tarda un pedido?</span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-300"></i>
+                    </button>
+                    <div class="px-6 pb-5 text-slate-400 hidden faq-content border-t border-slate-800 pt-4 leading-relaxed">
+                        Depende del volumen y complejidad. Piezas pequeñas suelen estar listas en 2-3 días. Cascos, espadas o pedidos grandes pueden tardar de 1 a 2 semanas. Al cotizar te daremos una fecha exacta de entrega.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: SOBRE NOSOTROS -->
+        <section id="nosotros" class="py-24 scroll-mt-24 reveal">
+            <div class="grid md:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+                <div class="order-2 md:order-1 relative">
+                     <div class="aspect-video bg-slate-800 rounded-2xl border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden group shadow-2xl">
+                        <div class="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105" style="background-image: url('https://i.postimg.cc/wBXGPm8v/foto-impresoras-3d-del-taller.jpg')"></div>
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#050510] via-black/40 to-transparent"></div>
+                        <div class="relative z-10 mt-auto w-full p-6 text-left">
+                            <p class="text-white font-bold text-lg drop-shadow-md flex items-center gap-2"><i data-lucide="layers" class="w-5 h-5 text-blue-500"></i> El núcleo del Taller</p>
+                        </div>
+                     </div>
+                     <div class="absolute -bottom-4 -right-4 bg-slate-900 p-4 rounded-xl border border-slate-700 shadow-xl flex items-center gap-3">
+                        <i data-lucide="map-pin" class="text-red-500 w-6 h-6 animate-bounce"></i>
+                        <div><p class="text-xs text-slate-400 uppercase font-bold">Ubicación</p><p class="text-white font-bold text-sm">Oaxaca, México</p></div>
+                     </div>
+                </div>
+                <div class="order-1 md:order-2">
+                    <div class="inline-flex items-center gap-2 text-white text-xs font-bold mb-4 tracking-widest uppercase bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+                        <i data-lucide="user" class="w-3 h-3"></i> El Forjador
+                    </div>
+                    <h3 class="text-3xl md:text-5xl font-black text-white font-serif mb-6">HOLA, SOY ARMANDO</h3>
+                    <p class="text-slate-400 mb-6 leading-relaxed text-lg">
+                        Bienvenido a <strong>Pendragon Forge</strong>. Desde mi taller en Oaxaca, me dedico a materializar ideas. 
+                        A diferencia de las fábricas masivas, aquí reviso personalmente cada capa y calibro mis máquinas para asegurar la máxima calidad. Ya sea que busques un simple llavero o desarrollar un ecosistema entero, estás en el lugar correcto.
+                    </p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="window.open('https://www.tiktok.com/@pendragonforge3d', '_blank')" class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center gap-4 hover:border-red-500/50 transition group cursor-pointer">
+                            <div class="text-red-500 group-hover:scale-110 transition"><i data-lucide="video" class="w-6 h-6"></i></div>
+                            <div class="text-left"><p class="text-white font-bold text-sm">Ver TikToks</p><p class="text-xs text-slate-500">Procesos reales</p></div>
+                        </button>
+                        <button onclick="openWhatsApp()" class="bg-slate-900/50 p-4 rounded-xl border border-slate-800 flex items-center gap-4 hover:border-green-500/50 transition group cursor-pointer">
+                            <div class="text-green-500 group-hover:scale-110 transition"><i data-lucide="message-circle" class="w-6 h-6"></i></div>
+                            <div class="text-left"><p class="text-white font-bold text-sm">Escríbeme</p><p class="text-xs text-slate-500">Trato directo</p></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- FOOTER PREMIUM -->
+    <footer class="bg-[#020205] text-slate-400 py-16 border-t border-slate-800 mt-12 relative z-10">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <!-- Marca -->
+                <div class="md:col-span-1">
+                    <div class="flex items-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition" onclick="window.scrollTo(0,0)">
+                        <img src="logo.jpg" alt="Logo Pendragon Forge" class="w-10 h-10 rounded-lg border border-yellow-500/30 shadow-[0_0_10px_rgba(212,160,23,0.3)]" onerror="this.src='https://i.imgur.com/J5efweH.png'" />
+                        <span class="text-xl font-black text-white font-serif tracking-widest leading-none">PENDRAGON<br><span class="text-[10px] tracking-[0.3em] font-sans font-normal text-slate-500">FORGE STUDIOS</span></span>
+                    </div>
+                    <p class="text-sm mb-6 leading-relaxed">Impresión 3D FDM, Corte Láser, y desarrollo de experiencias tabletop y software. Fabricado con orgullo en Oaxaca, México.</p>
+                </div>
+                
+                <!-- Links Taller -->
+                <div>
+                    <h5 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">El Taller</h5>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="#servicios" class="hover:text-blue-400 transition">Servicios de Impresión</a></li>
+                        <li><a href="#catalogo" class="hover:text-blue-400 transition">Catálogo Físico</a></li>
+                        <li><a href="#faq" class="hover:text-blue-400 transition">Envíos y Entregas (FAQ)</a></li>
+                        <li><a href="#nosotros" class="hover:text-blue-400 transition">Conoce al Maker</a></li>
+                    </ul>
+                </div>
+
+                <!-- Links Digital -->
+                <div>
+                    <h5 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Ecosistema Digital</h5>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="https://cults3d.com/es/usuarios/PENDRAGON3D/modelos-3d" target="_blank" class="hover:text-purple-400 transition">Cults3D (STLs Premium)</a></li>
+                        <li><a href="https://makerworld.com/es/@PENDRAGON3D/upload" target="_blank" class="hover:text-purple-400 transition">MakerWorld (STLs Gratis)</a></li>
+                        <li><a href="https://card-editor-zeta.vercel.app/" target="_blank" class="hover:text-purple-400 transition">Web Card Editor</a></li>
+                        <li><button onclick="openLoreModal()" class="hover:text-fuchsia-400 transition">Códice (Lore)</button></li>
+                    </ul>
+                </div>
+
+                <!-- Contacto -->
+                <div>
+                    <h5 class="text-white font-bold mb-4 uppercase tracking-wider text-sm">Contacto Directo</h5>
+                    <ul class="space-y-4 text-sm">
+                        <li class="flex items-center gap-3"><i data-lucide="map-pin" class="w-4 h-4 text-red-500"></i> Oaxaca de Juárez, México</li>
+                        <li class="flex items-center gap-3"><i data-lucide="message-circle" class="w-4 h-4 text-green-500"></i> +52 222 123 6293</li>
+                        <li>
+                            <button onclick="openWhatsApp()" class="w-full py-2 mt-2 bg-green-600/20 hover:bg-green-600 text-green-500 hover:text-white rounded border border-green-500/30 transition font-bold flex justify-center items-center gap-2">
+                                Iniciar Chat en WA
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Redes & Copyright -->
+            <div class="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="text-xs text-slate-600">© 2024-2026 PENDRAGON FORGE STUDIOS. Todos los derechos reservados.</div>
+                <div class="flex gap-4">
+                    <a href="https://www.tiktok.com/@pendragonforge3d" target="_blank" class="bg-slate-900 p-2 rounded-full hover:bg-red-600 hover:text-white transition text-slate-400 border border-slate-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" /></svg></a>
+                    <a href="https://instagram.com" target="_blank" class="bg-slate-900 p-2 rounded-full hover:bg-pink-600 hover:text-white transition text-slate-400 border border-slate-800"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+                    <a href="https://facebook.com" target="_blank" class="bg-slate-900 p-2 rounded-full hover:bg-blue-600 hover:text-white transition text-slate-400 border border-slate-800"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BOTÓN WHATSAPP FLOTANTE -->
+    <a href="#" onclick="event.preventDefault(); openWhatsApp();" class="fixed bottom-6 left-6 md:left-auto md:right-6 bg-green-500 text-white p-4 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.5)] z-50 hover:bg-green-400 transition transform hover:scale-110 animate-pulse">
+        <i data-lucide="message-circle" class="w-6 h-6"></i>
+    </a>
+
+    <!-- BOTÓN VOLVER ARRIBA -->
+    <button id="btn-back-to-top" onclick="window.scrollTo(0,0)" class="fixed bottom-24 md:bottom-6 right-6 bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-full shadow-lg border border-slate-600 z-40 transition-all duration-300 opacity-0 translate-y-10 hidden md:flex items-center justify-center">
+        <i data-lucide="arrow-up" class="w-5 h-5"></i>
+    </button>
+
+    <!-- ========================================== -->
+    <!-- MODALES Y PANTALLAS EMERGENTES (OVERLAYS)  -->
+    <!-- ========================================== -->
+
+    <!-- 1. MODAL DEL CÓDICE LORE (CON LOS 40 UNIVERSOS) -->
+    <div id="lore-modal" class="fixed inset-0 z-[100] bg-[#050510] hidden overflow-y-auto no-scrollbar opacity-0 transition-opacity duration-300">
+        <div class="min-h-screen relative p-4 md:p-8 pt-20">
+            <!-- Botón Cerrar Flotante en el Códice -->
+            <button onclick="closeLoreModal()" class="fixed top-6 right-6 bg-slate-800 hover:bg-red-600 text-white p-3 rounded-full shadow-lg border border-slate-600 z-[110] transition group flex items-center gap-2">
+                <i data-lucide="x" class="w-5 h-5"></i> <span class="text-xs font-bold uppercase hidden md:inline group-hover:block">Cerrar Códice</span>
+            </button>
+
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <span class="text-fuchsia-500 font-bold tracking-[0.3em] text-sm uppercase mb-2 block">Archivos Expandidos</span>
+                    <h2 class="text-4xl md:text-6xl font-black text-white font-serif mb-6 uppercase">Fragmentos del Velo</h2>
+                    <p class="text-slate-400 text-lg max-w-3xl mx-auto leading-relaxed">
+                        Nuestro Juego de Cartas Coleccionables. Un universo unificado con 12 Rasgos de Gloria canónicos y facciones asimétricas basadas en los 6 Fragmentos Universales.
+                    </p>
+                </div>
+
+                <!-- Los 6 Fragmentos Universales -->
+                <div class="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 mb-16 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-50"></div>
+                    <h3 class="text-2xl font-bold text-white mb-8 text-center uppercase tracking-widest">Los 6 Pilares Elementales</h3>
+                    <div class="flex gap-4 md:gap-12 flex-wrap justify-center">
+                        <div class="text-center group"><div class="w-12 h-12 rounded-full bg-green-500 mx-auto mb-3 shadow-[0_0_20px_rgba(34,197,94,0.6)] border-2 border-white/20 group-hover:scale-110 transition"></div><span class="text-xs font-bold text-green-500 tracking-widest">VIDA</span></div>
+                        <div class="text-center group"><div class="w-12 h-12 rounded-full bg-slate-300 mx-auto mb-3 shadow-[0_0_20px_rgba(203,213,225,0.4)] border-2 border-white/20 group-hover:scale-110 transition"></div><span class="text-xs font-bold text-slate-300 tracking-widest">LUZ</span></div>
+                        <div class="text-center group"><div class="w-12 h-12 rounded-full bg-yellow-500 mx-auto mb-3 shadow-[0_0_20px_rgba(234,179,8,0.6)] border-2 border-white/20 group-hover:scale-110 transition"></div><span class="text-xs font-bold text-yellow-500 tracking-widest">ORDEN</span></div>
+                        <div class="text-center group"><div class="w-12 h-12 rounded-full bg-purple-500 mx-auto mb-3 shadow-[0_0_20px_rgba(168,85,247,0.6)] border-2 border-white/20 group-hover:scale-110 transition"></div><span class="text-xs font-bold text-purple-500 tracking-widest">VÍNCULO</span></div>
+                        <div class="text-center group"><div class="w-12 h-12 rounded-full bg-orange-500 mx-auto mb-3 shadow-[0_0_20px_rgba(249,115,22,0.6)] border-2 border-white/20 group-hover:scale-110 transition"></div><span class="text-xs font-bold text-orange-500 tracking-widest">TIEMPO</span></div>
+                        <div class="text-center group"><div class="w-12 h-12 rounded-full bg-pink-500 mx-auto mb-3 shadow-[0_0_20px_rgba(236,72,153,0.6)] border-2 border-white/20 group-hover:scale-110 transition"></div><span class="text-xs font-bold text-pink-500 tracking-widest">PROPÓSITO</span></div>
+                    </div>
+                </div>
+
+                <!-- Cuadrícula de Facciones -->
+                <h3 class="text-2xl font-bold text-white mb-8 text-center uppercase tracking-widest">Facciones Principales</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                    <div class="bg-slate-900/40 border-l-4 border-yellow-500 p-6 rounded-r-2xl hover:bg-slate-900/80 transition group border-y border-r border-slate-800">
+                        <span class="text-xs font-mono text-yellow-500 tracking-widest uppercase mb-2 block">Fragmento: Orden</span>
+                        <h4 class="text-xl text-white font-bold uppercase tracking-wider mb-3">Custodios del Velo</h4>
+                        <p class="text-sm text-slate-400 mb-6 leading-relaxed">Guardianes del equilibrio entre Fragmentos. Fuerza bruta canalizada en disciplina absoluta. Controlan el campo y niegan el caos.</p>
+                        <p class="text-xs text-slate-500 uppercase font-mono tracking-wider group-hover:text-yellow-500 transition border-t border-slate-800 pt-4 mt-auto">MOV 2 · DEF alta · Bloqueo</p>
+                    </div>
+                    <div class="bg-slate-900/40 border-l-4 border-purple-500 p-6 rounded-r-2xl hover:bg-slate-900/80 transition group border-y border-r border-slate-800">
+                        <span class="text-xs font-mono text-purple-500 tracking-widest uppercase mb-2 block">Fragmento: Vínculo</span>
+                        <h4 class="text-xl text-white font-bold uppercase tracking-wider mb-3">Tejedores del Nexo</h4>
+                        <p class="text-sm text-slate-400 mb-6 leading-relaxed">Comparten habilidades entre unidades. Su fuerza escala exponencialmente con cada aliado en campo. Sinergias imposibles.</p>
+                        <p class="text-xs text-slate-500 uppercase font-mono tracking-wider group-hover:text-purple-500 transition border-t border-slate-800 pt-4 mt-auto">MOV 2 · Compartir Skills</p>
+                    </div>
+                    <div class="bg-slate-900/40 border-l-4 border-green-500 p-6 rounded-r-2xl hover:bg-slate-900/80 transition group border-y border-r border-slate-800">
+                        <span class="text-xs font-mono text-green-500 tracking-widest uppercase mb-2 block">Fragmento: Vida</span>
+                        <h4 class="text-xl text-white font-bold uppercase tracking-wider mb-3">Hijos de la Traición</h4>
+                        <p class="text-sm text-slate-400 mb-6 leading-relaxed">Dominan regeneración y resurrección. Nunca mueren del todo. Cada caída los hace más fuertes en el tablero de juego.</p>
+                        <p class="text-xs text-slate-500 uppercase font-mono tracking-wider group-hover:text-green-500 transition border-t border-slate-800 pt-4 mt-auto">MOV 3 · Revive 1x</p>
+                    </div>
+                    <div class="bg-slate-900/40 border-l-4 border-pink-500 p-6 rounded-r-2xl hover:bg-slate-900/80 transition group border-y border-r border-slate-800">
+                        <span class="text-xs font-mono text-pink-500 tracking-widest uppercase mb-2 block">Fragmento: Propósito</span>
+                        <h4 class="text-xl text-white font-bold uppercase tracking-wider mb-3">Portadores del Cisma</h4>
+                        <p class="text-sm text-slate-400 mb-6 leading-relaxed">La facción del caos inevitable. Sus efectos no pueden ser bloqueados. Cada acción acerca el fin del universo conocido.</p>
+                        <p class="text-xs text-slate-500 uppercase font-mono tracking-wider group-hover:text-pink-500 transition border-t border-slate-800 pt-4 mt-auto">MOV 2-3 · Daño Inevitable</p>
+                    </div>
+                </div>
+
+                <!-- Los 40 Universos (Generados dinámicamente en JS) -->
+                <h3 class="text-2xl font-bold text-white mb-8 text-center uppercase tracking-widest border-t border-slate-800 pt-16">Los 40 Universos Conocidos</h3>
+                <p class="text-center text-slate-400 mb-8 max-w-2xl mx-auto">Sistemas estelares conectados al Velo. Cada uno cuenta con su propia línea de miniaturas 3D y reglas en el juego.</p>
+                <div id="codice-universes-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-16">
+                    <!-- Se llena con JS -->
+                </div>
+
+                <div class="text-center pb-20">
+                    <button onclick="openWhatsApp('Quiero adquirir el Starter Pack de Fragmentos del Velo')" class="px-8 py-4 bg-fuchsia-600 hover:bg-fuchsia-500 text-white font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(217,70,239,0.5)] hover:scale-105 inline-flex items-center gap-3">
+                        <i data-lucide="shopping-cart" class="w-5 h-5"></i> Comprar Starter Pack Físico
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 2. MODAL PRODUCTO / FORJA -->
+    <div id="product-modal" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-300" onclick="closeModal()">
+        <div class="bg-[#0a0a1a] rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[90vh] border border-slate-800 transform scale-95 transition-transform duration-300" id="modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute top-4 right-4 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full z-10 transition backdrop-blur-md border border-white/10">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="w-full md:w-1/2 flex items-center justify-center relative overflow-hidden bg-slate-900" id="modal-img-container">
+                 <div class="absolute inset-0 opacity-30 bg-[radial-gradient(circle,rgba(59,130,246,0.5)_0%,transparent_70%)] z-0"></div>
+                 <img id="modal-img" src="" alt="Producto" class="w-full h-full object-cover relative z-10" />
+            </div>
+            <div class="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto no-scrollbar bg-[#0a0a1a]">
+                <div class="mb-6">
+                    <span id="modal-cat" class="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded border border-blue-900/50 text-blue-400 bg-blue-900/20"></span>
+                    <h2 id="modal-title" class="text-3xl font-black text-white mt-4 mb-2 font-serif tracking-wide"></h2>
+                    <p id="modal-price" class="text-2xl text-white font-medium"></p>
+                </div>
+                <p id="modal-desc" class="text-slate-300 text-lg leading-relaxed font-light mb-8"></p>
+                
+                <button id="modal-btn" onclick="" class="w-full py-4 rounded-lg font-bold transition shadow-lg flex items-center justify-center gap-3 text-lg text-white border border-white/10 bg-blue-600 hover:bg-blue-500 shadow-blue-900/20">
+                    <i data-lucide="message-circle" class="w-6 h-6"></i> <span id="modal-btn-text">Cotizar este producto</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. LIGHTBOX GALERÍA -->
+    <div id="lightbox" class="fixed inset-0 z-[70] bg-black/95 hidden flex justify-center items-center opacity-0 transition-opacity duration-300" onclick="closeLightbox()">
+        <button onclick="closeLightbox()" class="absolute top-4 right-4 bg-black/50 hover:bg-slate-800 text-white p-2 rounded-full z-10 transition border border-white/10">
+            <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+        <img id="lightbox-img" src="" class="max-w-[95%] max-h-[90vh] object-contain rounded-lg shadow-2xl transition-transform duration-300 scale-95" onclick="event.stopPropagation()">
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        lucide.createIcons();
+
+        function openWhatsApp(productName = null, customMessage = null) {
+            let text = customMessage || (productName ? `Hola Armando! Vi el catálogo de Pendragon Forge y me interesa: ${productName}` : `Hola Armando! Soy de Oaxaca y quiero cotizar un trabajo en tu Forja.`);
+            window.open(`https://wa.me/${BRAND.whatsapp}?text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        // --- SISTEMA DEL ORÁCULO A WHATSAPP ---
+        function invocarOraculoWhatsApp() {
+            const prompt = document.getElementById('oracle-prompt').value.trim();
+            const errorDiv = document.getElementById('oracle-error');
+            
+            if (!prompt) {
+                errorDiv.textContent = "El Oráculo necesita que describas tu idea para transmitirla a la forja.";
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            errorDiv.classList.add('hidden');
+
+            const mensaje = `¡Hola Armando! El Oráculo me ha dado una visión para una nueva carta/unidad y quiero ver si podemos forjarla:\n\n"${prompt}"\n\n¿Qué opinas?`;
+            openWhatsApp(null, mensaje);
+        }
+
+        // --- SISTEMA DE "PESTAÑA" PARA EL LORE (MODAL FULL SCREEN) ---
+        const loreModal = document.getElementById('lore-modal');
+
+        function openLoreModal() {
+            loreModal.classList.remove('hidden');
+            setTimeout(() => { 
+                loreModal.classList.remove('opacity-0');
+                loreModal.querySelector('.max-w-6xl').classList.add('lore-enter');
+                loreModal.querySelector('.max-w-6xl').classList.remove('lore-exit');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLoreModal() {
+            loreModal.querySelector('.max-w-6xl').classList.remove('lore-enter');
+            loreModal.querySelector('.max-w-6xl').classList.add('lore-exit');
+            
+            loreModal.classList.add('opacity-0');
+            setTimeout(() => { 
+                loreModal.classList.add('hidden'); 
+                document.body.style.overflow = 'auto'; 
+            }, 300);
+        }
+
+        // --- RENDERIZADO DEL CÓDICE (UNIVERSOS) ---
+        function renderCodiceUniverses() {
+            const grid = document.getElementById('codice-universes-grid');
+            grid.innerHTML = '';
+            forjas.forEach(f => {
+                grid.innerHTML += `
+                <div class="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl text-center hover:border-fuchsia-500/50 hover:bg-slate-800/80 transition group flex flex-col items-center">
+                    <img src="${f.logo}" class="w-14 h-14 object-contain mb-4 group-hover:scale-110 transition opacity-80 group-hover:opacity-100 drop-shadow-[0_0_10px_rgba(255,255,255,0.1)]" onerror="this.style.display='none'">
+                    <h5 class="text-xs font-bold text-white uppercase tracking-wider mb-2">${f.name}</h5>
+                    <p class="text-[10px] text-slate-500 line-clamp-2">${f.desc}</p>
+                </div>
+                `;
+            });
+        }
+
+        // --- RENDERIZADO DE PRODUCTOS Y FORJAS ---
+        function renderProducts(filter = 'all') {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+            
+            filtered.forEach(p => {
+                const isNewBadge = p.isNew ? `<div class="absolute top-4 left-4 z-20 bg-yellow-500 text-black text-[10px] font-black px-2 py-1 rounded shadow-lg">NUEVO</div>` : '';
+                const card = `
+                <div class="bg-slate-900/50 rounded-xl overflow-hidden shadow-lg border border-slate-800 hover:border-blue-500/50 transition-all duration-300 group cursor-pointer flex flex-col hover:-translate-y-2 relative" onclick="openProductModal(${p.id})">
+                  ${isNewBadge}
+                  <div class="h-64 w-full flex items-center justify-center relative overflow-hidden bg-[#0a0a1a]">
+                     <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover transform group-hover:scale-110 transition duration-500" loading="lazy"/>
+                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                        <span class="text-white border border-white/30 px-6 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition duration-300">Ver Detalles</span>
+                    </div>
+                  </div>
+                  <div class="p-6 flex-1 flex flex-col">
+                    <h3 class="text-xl font-bold text-white mb-3 leading-tight font-serif group-hover:text-blue-400 transition-colors">${p.title}</h3>
+                    <p class="text-slate-400 text-sm mb-6 flex-1 line-clamp-3 overflow-hidden text-ellipsis display-webkit-box webkit-line-clamp-3 webkit-box-orient-vertical">${p.desc}</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-800">
+                        <span class="text-lg font-bold text-white">${p.price}</span>
+                        <div class="text-slate-500 group-hover:text-white bg-slate-800 p-2 rounded-full transition"><i data-lucide="arrow-right" class="w-4 h-4"></i></div>
+                    </div>
+                  </div>
+                </div>`;
+                grid.innerHTML += card;
+            });
+            lucide.createIcons();
+        }
+
+        function renderForjas() {
+            const grid = document.getElementById('forjas-grid');
+            grid.innerHTML = '';
+            forjas.forEach(f => {
+                const bgUrl = f.image ? f.image : f.logo;
+                const bgClass = f.image ? "object-cover opacity-50" : "object-cover opacity-30 blur-md scale-150";
+
+                const card = `
+                <div class="relative aspect-square bg-slate-900 rounded-xl overflow-hidden group cursor-pointer border border-slate-800 hover:border-purple-500/50 transition-all duration-300 shadow-lg" onclick="openForjaModal('${f.id}')">
+                    <img src="${bgUrl}" alt="Fondo ${f.name}" class="absolute inset-0 w-full h-full ${bgClass} group-hover:opacity-20 transition duration-500" loading="lazy" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent"></div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center p-4 transition-transform duration-300 group-hover:-translate-y-4">
+                        <img src="${f.logo}" alt="Logo" class="w-3/4 object-contain drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]" onerror="this.style.display='none'" />
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center">
+                        <p class="text-[10px] md:text-xs text-slate-300 text-center line-clamp-2 mb-2 leading-tight">${f.desc}</p>
+                    </div>
+                </div>`;
+                grid.innerHTML += card;
+            });
+            lucide.createIcons();
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById('gallery-grid');
+            galleryImages.forEach((img, idx) => {
+                const card = `
+                <div class="aspect-square bg-slate-900 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden hover:border-blue-500/50 transition relative group cursor-pointer shadow-lg" onclick="openLightbox('${img}')">
+                    <img src="${img}" alt="Trabajo ${idx}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition duration-500" loading="lazy" />
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-300 flex items-center justify-center">
+                        <i data-lucide="maximize-2" class="text-white w-8 h-8 drop-shadow-lg"></i>
+                    </div>
+                </div>`;
+                grid.innerHTML += card;
+            });
+        }
+
+        function filterProducts(category) {
+            renderProducts(category);
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => { btn.className = "filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"; });
+            event.currentTarget.className = "filter-btn active px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-800 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] flex items-center gap-1";
+            lucide.createIcons();
+        }
+
+        // --- Resto de Modals y Lightbox ---
+        const modal = document.getElementById('product-modal');
+        const modalContent = document.getElementById('modal-content');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightbox-img');
+        
+        function openProductModal(id) {
+            const product = products.find(p => p.id === id);
+            if(!product) return;
+            document.getElementById('modal-img').src = product.image;
+            document.getElementById('modal-img').className = "w-full h-full object-contain relative z-10 p-4 bg-black/50";
+            document.getElementById('modal-cat').textContent = product.category;
+            document.getElementById('modal-cat').className = "text-xs font-bold uppercase tracking-widest px-3 py-1 rounded border border-blue-900/50 text-blue-400 bg-blue-900/20";
+            document.getElementById('modal-title').textContent = product.title;
+            document.getElementById('modal-price').textContent = product.price;
+            document.getElementById('modal-desc').textContent = product.desc;
+            document.getElementById('modal-btn-text').textContent = "Cotizar este producto";
+            document.getElementById('modal-btn').onclick = () => openWhatsApp(product.title);
+            showModalAnim();
+        }
+
+        function openForjaModal(id) {
+            const forja = forjas.find(f => f.id === id);
+            if(!forja) return;
+            if(forja.image) {
+                document.getElementById('modal-img').src = forja.image;
+                document.getElementById('modal-img').className = "w-full h-full object-cover relative z-10";
+            } else {
+                document.getElementById('modal-img').src = forja.logo;
+                document.getElementById('modal-img').className = "w-full h-full object-contain relative z-10 p-12 bg-black/80 drop-shadow-[0_0_30px_rgba(255,255,255,0.1)]";
+            }
+            document.getElementById('modal-cat').textContent = "Línea de Diseño Original";
+            document.getElementById('modal-cat').className = "text-xs font-bold uppercase tracking-widest px-3 py-1 rounded border border-purple-900/50 text-purple-400 bg-purple-900/20";
+            document.getElementById('modal-title').textContent = forja.name;
+            document.getElementById('modal-price').textContent = "Bajo Pedido";
+            document.getElementById('modal-desc').innerHTML = `${forja.desc}<br><br><span class="text-sm text-slate-400 italic">Esta es una de nuestras líneas de diseño exclusivas. Puedes explorar todos los modelos en nuestros repositorios web o pedirnos la impresión física.</span>`;
+            document.getElementById('modal-btn-text').textContent = "Cotizar impresión de esta Forja";
+            document.getElementById('modal-btn').onclick = () => openWhatsApp(forja.name, `Hola, me interesa cotizar la impresión física de un modelo de tu línea exclusiva: ${forja.name}`);
+            showModalAnim();
+        }
+
+        function showModalAnim() {
+            modal.classList.remove('hidden');
+            setTimeout(() => { modal.classList.remove('opacity-0'); modalContent.classList.remove('scale-95'); modalContent.classList.add('scale-100'); }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.add('opacity-0');
+            modalContent.classList.remove('scale-100');
+            modalContent.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); document.body.style.overflow = 'auto'; }, 300);
+        }
+
+        function openLightbox(imgSrc) {
+            lightboxImg.src = imgSrc;
+            lightbox.classList.remove('hidden');
+            setTimeout(() => { 
+                lightbox.classList.remove('opacity-0'); 
+                lightboxImg.classList.remove('scale-95');
+                lightboxImg.classList.add('scale-100');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            lightbox.classList.add('opacity-0');
+            lightboxImg.classList.remove('scale-100');
+            lightboxImg.classList.add('scale-95');
+            setTimeout(() => { lightbox.classList.add('hidden'); document.body.style.overflow = 'auto'; }, 300);
+        }
+
+        // --- Utilidades UI ---
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function toggleFaq(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // --- Listeners de Scroll (Animaciones y Header) ---
+        function handleScroll() {
+            const header = document.getElementById('main-header');
+            if (header) {
+                if (window.scrollY > 50) {
+                    header.classList.add('bg-[#050510]/90', 'backdrop-blur-md', 'shadow-md');
+                    header.classList.remove('bg-transparent');
+                } else {
+                    header.classList.remove('bg-[#050510]/90', 'backdrop-blur-md', 'shadow-md');
+                    header.classList.add('bg-transparent');
+                }
+            }
+
+            const btnTop = document.getElementById('btn-back-to-top');
+            if (btnTop) {
+                if(window.scrollY > 500) {
+                    btnTop.classList.remove('opacity-0', 'translate-y-10');
+                    btnTop.classList.add('opacity-100', 'translate-y-0');
+                } else {
+                    btnTop.classList.add('opacity-0', 'translate-y-10');
+                    btnTop.classList.remove('opacity-100', 'translate-y-0');
+                }
+            }
+        }
+
+        // Intersection Observer para animaciones Reveal
+        function initScrollAnimations() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        window.addEventListener('scroll', handleScroll);
+
+        window.onload = () => { 
+            renderProducts(); 
+            renderForjas(); 
+            renderGallery(); 
+            renderCodiceUniverses(); // Renderizar los 40 universos en el modal de Lore
+            initScrollAnimations();
+            handleScroll();
+        };
+    </script>
+</body>
+</html>
