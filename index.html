@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pendragon Forge | Impresión 3D y Ecosistema Maker</title>
+    <meta name="description" content="Impresión 3D, accesorios gamer, decoración, miniaturas y proyectos personalizados. Pendragon Forge Studios, taller maker en Oaxaca con envíos a México.">
+    <link rel="canonical" href="https://pendragonforge3d.com/">
+    <meta property="og:title" content="Pendragon Forge Studios | Impresión 3D">
+    <meta property="og:description" content="Explora nuestro catálogo de impresiones 3D y solicita piezas personalizadas.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://pendragonforge3d.com/">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -102,23 +108,24 @@
             }
         };
 
-        // 👇👇👇 AQUÍ PUEDES AGREGAR O QUITAR PRODUCTOS AL CATÁLOGO 👇👇👇
-        // Para agregar uno nuevo, solo copia una línea, pégala abajo y cambia los datos.
-        // Categorías válidas: "decoracion", "funcional", "servicio"
-        const products = [
-            { id: 1, title: "Mini Cámara Retro Porta-Foto", category: "decoracion", price: "$60 MXN", image: "https://i.imgur.com/3D7fFjM.jpeg", desc: "Llavero funcional con diseño de cámara vintage. Cuenta con ranura para foto real.", isNew: true },
-            { id: 2, title: "Cascos y Props Cosplay", category: "decoracion", price: "Cotizar", image: "https://i.postimg.cc/HxThCkdj/cascos-impresos-y-pintados.jpg", desc: "Fabricación a escala real de cascos y armaduras. Entregamos en crudo o pintados.", isNew: true },
-            { id: 3, title: "Organizador Hot Wheels", category: "funcional", price: "Cotizar", image: "https://i.postimg.cc/9XJvCZ4H/coleccionador-hotwheels.jpg", desc: "Display modular tipo panal para carritos de colección escala 1:64.", isNew: false },
-            { id: 4, title: "Dragón y Dinosaurios Flexi", category: "decoracion", price: "Desde $150 MXN", image: "https://i.postimg.cc/MTzF8pqD/dragon-flexi.jpg", desc: "Figuras articuladas impresas en una pieza. Colores duales y metalizados.", isNew: false },
-            { id: 5, title: "Minis para Juegos de Mesa", category: "servicio", price: "Desde $30 MXN", image: "https://i.postimg.cc/x8CpcpkV/minis-helldivers.jpg", desc: "Alta resolución para D&D, Warhammer, etc. Detalle milimétrico listos para pintar.", isNew: false },
-            { id: 6, title: "Soporte Gamer", category: "funcional", price: "Desde $250 MXN", image: "https://i.postimg.cc/26TXjN5R/soporte-control-deriva.jpg", desc: "Soportes temáticos para controles de Xbox, PlayStation o Nintendo.", isNew: false },
-            { id: 7, title: "Figuras Pokémon", category: "decoracion", price: "Desde $25 MXN", image: "https://i.postimg.cc/mDT5GgBV/coleccion-pokemon-a-color-151.jpg", desc: "Modelos multicolores. El color es plástico real, sin pintura que se descarape.", isNew: false },
-            { id: 8, title: "Llaveros 3D Personalizados", category: "decoracion", price: "Desde $35 MXN", image: "https://i.postimg.cc/tJSfkG0d/llaveros-multicolor-3d.jpg", desc: "Llaveros con volumen impresos en varios colores. Ideal para souvenirs o logos.", isNew: false },
-            { id: 9, title: "Porta Llaves Garage", category: "funcional", price: "$180 MXN", image: "https://i.postimg.cc/bJqBjwpv/porta-llaves-garage1.jpg", desc: "Organizador simulando bujías y conectores. Impresión en PETG resistente.", isNew: false },
-            { id: 10, title: "Colección Yu-Gi-Oh! x Sanrio", category: "decoracion", price: "$325 MXN", image: "https://i.postimg.cc/C51rzrZK/yugioh-x-sanryo.jpg", desc: "Colección completa de figuras crossover impresas a todo color. Perfectas para escritorio.", isNew: true },
-            { id: 11, title: "Set Eevee y Evoluciones", category: "decoracion", price: "$450 MXN", image: "https://i.postimg.cc/C51rzrZT/pokemon-eevelutions.jpg", desc: "Incluye a Eevee y sus 3 primeras evoluciones clásicas. Impresión 3D multicolor lista para exhibir.", isNew: true }
-        ];
-        // 👆👆👆 FIN DE PRODUCTOS 👆👆👆
+        // Catálogo maestro: editar catalogo.json, no este HTML.
+        let products = [];
+        let currentCategory = 'all';
+
+        async function loadCatalog() {
+            const grid = document.getElementById('products-grid');
+            try {
+                const response = await fetch('./catalogo.json', { cache: 'no-store' });
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+                if (!Array.isArray(data.productos)) throw new Error('Formato de catálogo inválido');
+                products = data.productos.filter(p => p.published_web !== false);
+                renderProducts(currentCategory);
+            } catch (error) {
+                console.error('Error cargando el catálogo', error);
+                grid.textContent = 'No pudimos cargar el catálogo. Escríbenos por WhatsApp para consultar productos.';
+            }
+        }
 
         const forjas = [
             { id: 'aeonhammer', name: "Aeonhammer", logo: "https://i.postimg.cc/d367SnnG/aeonhammer.png", desc: "Armamento y utilería de ciencia ficción de eras futuras." },
@@ -373,16 +380,24 @@
                 <p class="text-slate-500 text-lg">Nuestros productos estrella listos para forjar y enviar a todo México.</p>
             </div>
             
+            <div class="max-w-xl mx-auto mb-8 px-4">
+                <label for="catalog-search" class="block text-sm text-slate-300 mb-2">Buscar en el catálogo</label>
+                <input id="catalog-search" type="search" placeholder="Ej. llaveros, dragón, soporte gamer"
+                       oninput="renderProducts(currentCategory)"
+                       class="w-full rounded-lg border border-slate-600 bg-slate-900 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+                       autocomplete="off">
+            </div>
+
             <!-- Filtros UI -->
             <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-12" id="filter-container">
-               <button onclick="filterProducts('all')" class="filter-btn active px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-800 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] transition">Todo</button>
-               <button onclick="filterProducts('decoracion')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="box" class="w-4 h-4"></i> Decoración</button>
-               <button onclick="filterProducts('funcional')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="hammer" class="w-4 h-4"></i> Resistente</button>
-               <button onclick="filterProducts('servicio')" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="settings" class="w-4 h-4"></i> Especial</button>
+               <button onclick="filterProducts('all', this)" class="filter-btn active px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-800 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] transition">Todo</button>
+               <button onclick="filterProducts('decoracion', this)" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="box" class="w-4 h-4"></i> Decoración</button>
+               <button onclick="filterProducts('funcional', this)" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="hammer" class="w-4 h-4"></i> Resistente</button>
+               <button onclick="filterProducts('servicio', this)" class="filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"><i data-lucide="settings" class="w-4 h-4"></i> Especial</button>
             </div>
 
             <!-- Grid de Productos -->
-            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div id="products-grid" aria-live="polite" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Se llena con JavaScript -->
             </div>
         </section>
@@ -419,14 +434,14 @@
                     <button onclick="window.open('https://makerworld.com/es/@PENDRAGON3D/upload', '_blank')" class="w-full py-3 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white rounded-lg font-bold transition flex items-center justify-center gap-2 border border-blue-600/50 mt-auto">Descargar Gratis <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
                 </div>
                 
-                <!-- TikTok Shop -->
+                <!-- Perfil TikTok; sustituir por enlace oficial de Shop cuando esté validado -->
                 <div class="bg-[#050510] border border-slate-800 p-8 rounded-2xl hover:border-red-500/50 transition group hover:-translate-y-2 relative overflow-hidden flex flex-col">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-red-600/10 rounded-full blur-[40px] pointer-events-none group-hover:bg-red-600/20 transition"></div>
                     <i data-lucide="shopping-bag" class="w-10 h-10 text-red-500 mb-6"></i>
-                    <h4 class="text-xl font-black text-white mb-1 uppercase">TikTok Shop</h4>
+                    <h4 class="text-xl font-black text-white mb-1 uppercase">TikTok</h4>
                     <p class="text-xs text-slate-500 font-mono mb-4 truncate">tiktok.com/@pendragonforge3d</p>
-                    <p class="text-sm text-slate-400 mb-6 flex-1">Compra física con envío respaldado a todo México y meses sin intereses. Ve nuestros videos de proceso.</p>
-                    <button onclick="window.open('https://www.tiktok.com/@pendragonforge3d', '_blank')" class="w-full py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg font-bold transition flex items-center justify-center gap-2 border border-red-600/50 mt-auto">Ir a TikTok Shop <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                    <p class="text-sm text-slate-400 mb-6 flex-1">Mira nuestros videos del proceso y conoce las novedades del taller. Estamos preparando el catálogo para TikTok Shop.</p>
+                    <button onclick="window.open('https://www.tiktok.com/@pendragonforge3d', '_blank')" class="w-full py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white rounded-lg font-bold transition flex items-center justify-center gap-2 border border-red-600/50 mt-auto">Ver TikTok <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
                 </div>
                 
                 <!-- WhatsApp -->
@@ -958,7 +973,15 @@
         function renderProducts(filter = 'all') {
             const grid = document.getElementById('products-grid');
             grid.innerHTML = '';
-            const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+            const query = (document.getElementById('catalog-search')?.value || '').trim().toLocaleLowerCase('es');
+            const filtered = products.filter(p =>
+                (filter === 'all' || p.category === filter) &&
+                (!query || (p.title + ' ' + p.desc).toLocaleLowerCase('es').includes(query))
+            );
+            if (!filtered.length) {
+                grid.innerHTML = '<p class="col-span-full text-center text-slate-400 py-8">No encontramos productos con esos filtros. Prueba otra búsqueda o escríbenos por WhatsApp.</p>';
+                return;
+            }
             
             filtered.forEach(p => {
                 const isNewBadge = p.isNew ? `<div class="absolute top-4 left-4 z-20 bg-yellow-500 text-black text-[10px] font-black px-2 py-1 rounded shadow-lg">NUEVO</div>` : '';
@@ -1022,11 +1045,19 @@
             });
         }
 
-        function filterProducts(category) {
-            renderProducts(category);
-            const buttons = document.querySelectorAll('.filter-btn');
-            buttons.forEach(btn => { btn.className = "filter-btn px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-900/50 text-slate-400 border-slate-800 hover:border-slate-500 hover:text-white transition flex items-center gap-1"; });
-            event.currentTarget.className = "filter-btn active px-4 py-2 rounded-lg text-sm font-bold border tracking-wider bg-slate-800 border-blue-500 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] flex items-center gap-1";
+        function filterProducts(category, button) {
+            currentCategory = category;
+            renderProducts(currentCategory);
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const active = btn === button;
+                btn.classList.toggle('active', active);
+                btn.classList.toggle('border-blue-500', active);
+                btn.classList.toggle('border-slate-800', !active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('text-slate-400', !active);
+                btn.classList.toggle('bg-slate-800', active);
+                btn.classList.toggle('bg-slate-900/50', !active);
+            });
             lucide.createIcons();
         }
 
@@ -1162,7 +1193,7 @@
         window.addEventListener('scroll', handleScroll);
 
         window.onload = () => { 
-            renderProducts(); 
+            loadCatalog();
             renderForjas(); 
             renderGallery(); 
             renderCodiceUniverses(); // Renderizar los 40 universos en el modal de Lore
